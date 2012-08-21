@@ -12,9 +12,10 @@
     <script type="text/javascript" src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=3.1"></script>
     <script type="text/javascript" src="../src/geojson2esri.js"></script>
     <script type="text/javascript">
-      var map,ptSymbol,lineSymbol,polySymbol,infoTemp;
+      var map,ptSymbol,lineSymbol,polySymbol,infoTemp,jsonconverter;
       function init()
       {
+        jsonconverter = geojsontoesri();
         ptSymbol = new esri.symbol.SimpleMarkerSymbol().setSize(10).setColor(new dojo.Color([255,0,0]));
         lineSymbol = new esri.symbol.SimpleLineSymbol(esri.symbol.SimpleLineSymbol.STYLE_SOLID, new dojo.Color([255,0,0]), 3);
         polySymbol = new esri.symbol.SimpleFillSymbol(esri.symbol.SimpleFillSymbol.STYLE_SOLID,lineSymbol,new dojo.Color([255,0,0,0.4]));
@@ -89,7 +90,7 @@
         
         var feats = geoJsonObject.features;
         var feat1 = feats[0];
-        var esriFeat = gcFeatureToEsriFeature(feat1);
+        var esriFeat = jsonconverter.gcFeatureToEsriFeature(feat1);
         var graphic = makeGraphicFromFeature(esriFeat);
         map.graphics.add(graphic);
       }
@@ -228,17 +229,17 @@
               "geometries": [{
                 "type": "Polygon",
                 "coordinates": [
-                  [[-89,42],[-89,50],[-80,50],[-80,42],[-89,42]]
+                  [[-95,43],[-95,50],[-90,50],[-91,42],[-95,43]]
                 ]
               }, {
                 "type": "Polygon",
                 "coordinates": [
-                  [
-                    [-95,42],[-94,50],[-92,50],[-93,42],[-95,42]
-                  ]
+                  [[-89,42],[-89,50],[-80,50],[-80,42],[-89,42]]
                 ]
-              }]
-            },
+              },{
+                "type": "Point",
+                "coordinates":[-94,46]
+            }]},
             "properties": {
               "STATE_ABBR": "ZZ",
               "STATE_NAME": "Top",

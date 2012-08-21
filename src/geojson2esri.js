@@ -23,30 +23,12 @@
  * Input is a GeoJSON geometry type - Point,LineString,Polygon, etc
  * 
  */
-function gcGeomTypeToEsriGeomInfo(gcType)
+function geojsontoesri()
 {
-	var esriType,geomHolderId, compatibilityFunction;
-	if (gcType === "Point")
-	{
-		esriType = "esriGeometryPoint";
-	}
-	else if (gcType === "MultiPoint")
-	{
-		esriType = "esriGeometryMultipoint";
-		geomHolderId = "points";
-	}	
-	else if (gcType === "LineString" || gcType === "MultiLineString")
-	{
-		esriType = "esriGeometryPolyline";
-		geomHolderId = "paths";
-	}
-	else if (gcType === "Polygon" || gcType === "MultiPolygon")
-	{
-		esriType = "esriGeometryPolygon";
-		geomHolderId = "rings";
-	}
+	var jcon = {};
 	
-	compatibilityFunction = function(esriGeomType,gcGeomType){
+	function isCompatible(esriGeomType,gcGeomType)
+	{
     var compatible = false;
     if ((esriGeomType === "esriGeometryPoint" || esriGeomType === "esriGeometryMultipoint") && (gcGeomType === "Point" || gcGeomType === "MultiPoint"))
     {
@@ -61,175 +43,215 @@ function gcGeomTypeToEsriGeomInfo(gcType)
       compatible = true;
     }
     return compatible;
-  };
-	return {type:esriType, geomHolder:geomHolderId, isCompatible:compatibilityFunction};
-} 
-
-/**
- * Functions below are to convert a GeoJSON polygon to an ESRI REST polygon. They include
- * a check to see if inner rings in the GeoJSON polygon are oriented counterclockwise.
- * This code assumes inner rings are oriented counterclockwise, so the checks are not included.
- */
-
-/*function makeInnerRing(inArrayOfPoints)
-{
-	var ring;
-	function ringIsClockwise(ringToTest)
+  }
+  
+	jcon.gcGeomTypeToEsriGeomInfo = function(gcType)
 	{
-		var total = 0, i = 0, pt1 = ringToTest[i];
-		for (i; i < ringToTest.length - 1; i += 1)
+		var esriType,geomHolderId, compatibilityFunction;
+		if (gcType === "Point")
 		{
-			var pt2 = ringToTest[i + 1];
-			total += (pt2[0] - pt1[0]) * (pt2[1] + pt1[1]);
-			pt1 = pt2;
+			esriType = "esriGeometryPoint";
 		}
-		return (total >= 0)
-	}
-	if (inArrayOfPoints && inArrayOfPoints.length > 3)
-	{
-		ring = ringIsClockwise(inArrayOfPoints) ? inArrayOfPoints.reverse() : inArrayOfPoints;
-	}
-	return ring;
-}
-
-function gcPolyToEsriPoly(gcPolyCoordinates)
-{
-	var i;
-	var esriPoly = [gcPolyCoordinates.shift()];
-	for (i=0; i < gcPolyCoordinates.length; i+=1) 
-	{
-		esriPoly.push(makeInnerRing(gcPolyCoordinates[i]));
-	}
-	return esriPoly;
-}*/
-
-/**
- Wraps GeoJSON coordinates in an array if necessary so code can iterate
- through array of points, rings, or lines and add them to an ESRI geometry
- 
- * Input is a GeoJSON geometry object. A GeoJSON GeometryCollection is not a
- * valid input */
-function gcCoordinatesToEsriCoordinates(gcGeom)
-{
-	var i,esriCoords;
-	if (gcGeom.type === "MultiPoint" || gcGeom.type === "MultiLineString" || gcGeom.type === "Polygon")
-	{
-		esriCoords = gcGeom.coordinates;
-	}
-	else if (gcGeom.type === "Point" || gcGeom.type === "LineString")
-	{
-		esriCoords = [gcGeom.coordinates];
-	}
-	else if (gcGeom.type === "MultiPolygon")
-	{
-		esriCoords = [];
-		for (i = 0; i < gcGeom.coordinates.length; i++)
+		else if (gcType === "MultiPoint")
 		{
-			esriCoords.push(gcGeom.coordinates[i]);
+			esriType = "esriGeometryMultipoint";
+			geomHolderId = "points";
+		}	
+		else if (gcType === "LineString" || gcType === "MultiLineString")
+		{
+			esriType = "esriGeometryPolyline";
+			geomHolderId = "paths";
 		}
-	}
-	return esriCoords;
-}
-
-/**
- * Converts GeoJSON geometry to ESRI geometry. The ESRI geometry is
- * only allowed to contain one type of geometry, so if the GeoJSON
- * geometry is a GeometryCollection, then only geometries compatible
- * with the first geometry type in the collection are added to the ESRI geometry
- * 
- * Input parameter is a GeoJSON geometry object.
- */
-function gcGeometryToEsriGeometry(gcGeom)
-{
-	var esriGeometry, esriGeomInfo, gcGeometriesToConvert, i;
-	
-	//if geometry collection, get info about first geometry in collection
-	if (gcGeom.type === "GeometryCollection")
-	{
-		gcGeometriesToConvert = [gcGeom.geometries.shift()];
-		esriGeomInfo = gcGeomTypeToEsriGeomInfo(gcGeometriesToConvert[0].type);
+		else if (gcType === "Polygon" || gcType === "MultiPolygon")
+		{
+			esriType = "esriGeometryPolygon";
+			geomHolderId = "rings";
+		}
 		
-		//loop through collection and only add compatible geometries to the array
-		//of geometries that will be converted
-		for (i = 0; i < gcGeom.geometries.length; i++)
+		/*compatibilityFunction = function(esriGeomType,gcGeomType){
+	    var compatible = false;
+	    if ((esriGeomType === "esriGeometryPoint" || esriGeomType === "esriGeometryMultipoint") && (gcGeomType === "Point" || gcGeomType === "MultiPoint"))
+	    {
+	      compatible = true;
+	    }
+	    else if (esriGeomType === "esriGeometryPolyline" && (gcGeomType === "LineString" || gcGeomType === "MultiLineString"))
+	    {
+	      compatible = true;
+	    }
+	    else if (esriGeomType === "esriGeometryPolygon" && (gcGeomType === "Polygon" || gcGeomType === "MultiPolygon"))
+	    {
+	      compatible = true;
+	    }
+	    return compatible;
+	  };*/
+		return {type:esriType, geomHolder:geomHolderId};
+	}; 
+	
+	/**
+	 * Functions below are to convert a GeoJSON polygon to an ESRI REST polygon. They include
+	 * a check to see if inner rings in the GeoJSON polygon are oriented counterclockwise.
+	 * This code assumes inner rings are oriented counterclockwise, so the checks are not included.
+	 */
+	
+	/*function makeInnerRing(inArrayOfPoints)
+	{
+		var ring;
+		function ringIsClockwise(ringToTest)
 		{
-			if (esriGeomInfo.isCompatible(esriGeomInfo.type,gcGeom.geometries[i].type))
+			var total = 0, i = 0, pt1 = ringToTest[i];
+			for (i; i < ringToTest.length - 1; i += 1)
 			{
-				gcGeometriesToConvert.push(gcGeom.geometries[i]);
+				var pt2 = ringToTest[i + 1];
+				total += (pt2[0] - pt1[0]) * (pt2[1] + pt1[1]);
+				pt1 = pt2;
+			}
+			return (total >= 0)
+		}
+		if (inArrayOfPoints && inArrayOfPoints.length > 3)
+		{
+			ring = ringIsClockwise(inArrayOfPoints) ? inArrayOfPoints.reverse() : inArrayOfPoints;
+		}
+		return ring;
+	}
+	
+	function gcPolyToEsriPoly(gcPolyCoordinates)
+	{
+		var i;
+		var esriPoly = [gcPolyCoordinates.shift()];
+		for (i=0; i < gcPolyCoordinates.length; i+=1) 
+		{
+			esriPoly.push(makeInnerRing(gcPolyCoordinates[i]));
+		}
+		return esriPoly;
+	}*/
+	
+	/**
+	 Wraps GeoJSON coordinates in an array if necessary so code can iterate
+	 through array of points, rings, or lines and add them to an ESRI geometry
+	 
+	 * Input is a GeoJSON geometry object. A GeoJSON GeometryCollection is not a
+	 * valid input */
+	jcon.gcCoordinatesToEsriCoordinates = function(gcGeom)
+	{
+		var i,esriCoords;
+		if (gcGeom.type === "MultiPoint" || gcGeom.type === "MultiLineString" || gcGeom.type === "Polygon")
+		{
+			esriCoords = gcGeom.coordinates;
+		}
+		else if (gcGeom.type === "Point" || gcGeom.type === "LineString")
+		{
+			esriCoords = [gcGeom.coordinates];
+		}
+		else if (gcGeom.type === "MultiPolygon")
+		{
+			esriCoords = [];
+			for (i = 0; i < gcGeom.coordinates.length; i++)
+			{
+				esriCoords.push(gcGeom.coordinates[i]);
 			}
 		}
-	}
-	else
-	{
-		esriGeomInfo = gcGeomTypeToEsriGeomInfo(gcGeom.type);
-		gcGeometriesToConvert = [gcGeom];
-	}
+		return esriCoords;
+	};
 	
-	//if a collection contained multiple points, change the ESRI geometry
-	//type to MultiPoint
-	if (esriGeomInfo.type === "esriGeometryPoint" && gcGeometriesToConvert.length > 1)
+	/**
+	 * Converts GeoJSON geometry to ESRI geometry. The ESRI geometry is
+	 * only allowed to contain one type of geometry, so if the GeoJSON
+	 * geometry is a GeometryCollection, then only geometries compatible
+	 * with the first geometry type in the collection are added to the ESRI geometry
+	 * 
+	 * Input parameter is a GeoJSON geometry object.
+	 */
+	jcon.gcGeometryToEsriGeometry = function(gcGeom)
 	{
-		esriGeomInfo = gcGeomTypeToEsriGeomInfo("MultiPoint");
-	}
-	
-	//make new empty ESRI geometry object
-	esriGeometry = {type:esriGeomInfo.type, spatialReference:{wkid:4326}};
-	
-	//perform conversion
-	if (esriGeomInfo.type === "esriGeometryPoint")
-	{
-		if (gcGeometriesToConvert[0].coordinates.length === 0)
+		var esriGeometry, esriGeomInfo, gcGeometriesToConvert, i;
+		
+		//if geometry collection, get info about first geometry in collection
+		if (gcGeom.type === "GeometryCollection")
 		{
-			esriGeometry.x = null;
-			esriGeometry.y = null;
+			gcGeometriesToConvert = [gcGeom.geometries.shift()];
+			esriGeomInfo = jcon.gcGeomTypeToEsriGeomInfo(gcGeometriesToConvert[0].type);
+			
+			//loop through collection and only add compatible geometries to the array
+			//of geometries that will be converted
+			for (i = 0; i < gcGeom.geometries.length; i++)
+			{
+				if (isCompatible(esriGeomInfo.type,gcGeom.geometries[i].type))
+				{
+					gcGeometriesToConvert.push(gcGeom.geometries[i]);
+				}
+			}
 		}
 		else
 		{
-			esriGeometry.x = gcGeometriesToConvert[0].coordinates[0];
-			esriGeometry.y = gcGeometriesToConvert[0].coordinates[1];
+			esriGeomInfo = jcon.gcGeomTypeToEsriGeomInfo(gcGeom.type);
+			gcGeometriesToConvert = [gcGeom];
 		}
-	}
-	else
-	{
-		var g,coords;
-		esriGeometry[esriGeomInfo.geomHolder] = [];
-		for (i=0; i < gcGeometriesToConvert.length; i++)
+		
+		//if a collection contained multiple points, change the ESRI geometry
+		//type to MultiPoint
+		if (esriGeomInfo.type === "esriGeometryPoint" && gcGeometriesToConvert.length > 1)
 		{
-			coords = gcCoordinatesToEsriCoordinates(gcGeometriesToConvert[i]);
-			for (g = 0; g < coords.length; g++)
+			esriGeomInfo = jcon.gcGeomTypeToEsriGeomInfo("MultiPoint");
+		}
+		
+		//make new empty ESRI geometry object
+		esriGeometry = {type:esriGeomInfo.type, spatialReference:{wkid:4326}};
+		
+		//perform conversion
+		if (esriGeomInfo.type === "esriGeometryPoint")
+		{
+			if (gcGeometriesToConvert[0].coordinates.length === 0)
 			{
-				esriGeometry[esriGeomInfo.geomHolder].push(coords[g]);
+				esriGeometry.x = null;
+				esriGeometry.y = null;
+			}
+			else
+			{
+				esriGeometry.x = gcGeometriesToConvert[0].coordinates[0];
+				esriGeometry.y = gcGeometriesToConvert[0].coordinates[1];
 			}
 		}
-	}
-	return esriGeometry;
-}
-
-/**
- * Converts GeoJSON feature to ESRI REST Feature. 
- * Input parameter is a GeoJSON Feature object
- */
-function gcFeatureToEsriFeature(gcFeature)
-{
-	var esriFeat = null,prop;
-	if (gcFeature)
-	{
-		esriFeat = {};
-		if(gcFeature.geometry)
+		else
 		{
-			esriFeat.geometry = gcGeometryToEsriGeometry(gcFeature.geometry);
-		}
-		if(gcFeature.properties)
-		{
-			var esriAttribs = {};
-			for(prop in gcFeature.properties)
+			var g,coords;
+			esriGeometry[esriGeomInfo.geomHolder] = [];
+			for (i=0; i < gcGeometriesToConvert.length; i++)
 			{
-				esriAttribs[prop] = gcFeature.properties[prop];
+				coords = jcon.gcCoordinatesToEsriCoordinates(gcGeometriesToConvert[i]);
+				for (g = 0; g < coords.length; g++)
+				{
+					esriGeometry[esriGeomInfo.geomHolder].push(coords[g]);
+				}
 			}
-			esriFeat.attributes = esriAttribs;
 		}
-	}
-	return esriFeat;
+		return esriGeometry;
+	};
+	
+	/**
+	 * Converts GeoJSON feature to ESRI REST Feature. 
+	 * Input parameter is a GeoJSON Feature object
+	 */
+	jcon.gcFeatureToEsriFeature = function (gcFeature)
+	{
+		var esriFeat = null,prop;
+		if (gcFeature)
+		{
+			esriFeat = {};
+			if(gcFeature.geometry)
+			{
+				esriFeat.geometry = jcon.gcGeometryToEsriGeometry(gcFeature.geometry);
+			}
+			if(gcFeature.properties)
+			{
+				var esriAttribs = {};
+				for(prop in gcFeature.properties)
+				{
+					esriAttribs[prop] = gcFeature.properties[prop];
+				}
+				esriFeat.attributes = esriAttribs;
+			}
+		}
+		return esriFeat;
+	};
+	return jcon;
 }
-
-

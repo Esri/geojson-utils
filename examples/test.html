@@ -10,7 +10,7 @@
     <link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.1/js/dojo/dijit/themes/claro/claro.css">
     <link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.1/js/esri/dijit/css/Popup.css">
     <script type="text/javascript" src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=3.1"></script>
-    <script type="text/javascript" src="geotoesri.js"></script>
+    <script type="text/javascript" src="../src/geojson2esri.js"></script>
     <script type="text/javascript">
       var map,ptSymbol,lineSymbol,polySymbol,infoTemp;
       function init()
@@ -258,6 +258,7 @@
     <div id="mapdiv" style="width: 800px;height: 600px"></div>
     <div style="padding: 5px">
       <select id="selType" onchange="doTest();">
+        <option>Select a geometry type</option>
         <option value="Point">Point</option>
         <option value="Line">Line</option>
         <option value="Polygon">Polygon</option>

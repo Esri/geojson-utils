@@ -1,4 +1,4 @@
 jsonutils
 =========
 
-Utilities to convert json 
+Utilities to convert geojson  to Esri json format 

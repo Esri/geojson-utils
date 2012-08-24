@@ -35,6 +35,10 @@
       function makeGraphicFromFeature(esriFeature)
       {
         var geom,graphic;
+        if (! esriFeature.geometry)
+        {
+          return graphic;
+        }
         var infoTemp = new esri.InfoTemplate("Attributes","${*}");
         if (esriFeature.geometry)
         {
@@ -92,7 +96,10 @@
         var feat1 = feats[0];
         var esriFeat = jsonconverter.gcFeatureToEsriFeature(feat1);
         var graphic = makeGraphicFromFeature(esriFeat);
-        map.graphics.add(graphic);
+        if (graphic)
+        {
+           map.graphics.add(graphic);
+        }
       }
       
       function getTestPolyline()
@@ -137,6 +144,27 @@
               "type": "Point",
               "coordinates": [-89, 44]
             },
+            "properties": {
+              "fax": "305-571-8347",
+              "phone": "305-571-8345"
+            }
+          }],
+          "sort": null,
+          "page": 0,
+          "count": 236,
+          "limit": 1
+        };
+      }
+      
+      function getTestPointNull()
+      {
+        return {
+          "next_feature": "1",
+          "type": "FeatureCollection",
+          "start": 0,
+          "features": [{
+            "type": "Feature",
+            "id": "a7vs0i9rnyyx",
             "properties": {
               "fax": "305-571-8347",
               "phone": "305-571-8345"

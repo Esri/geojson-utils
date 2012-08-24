@@ -12,275 +12,249 @@
     <script type="text/javascript" src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=3.1compact"></script>
     <script type="text/javascript" src="../src/geojson2esri.js"></script>
     <script type="text/javascript">
-      var map,ptSymbol,lineSymbol,polySymbol,infoTemp,jsonconverter;
-      function init()
-      {
-        jsonconverter = geojsontoesri();
-        ptSymbol = new esri.symbol.SimpleMarkerSymbol().setSize(10).setColor(new dojo.Color([255,0,0]));
-        lineSymbol = new esri.symbol.SimpleLineSymbol(esri.symbol.SimpleLineSymbol.STYLE_SOLID, new dojo.Color([255,0,0]), 3);
-        polySymbol = new esri.symbol.SimpleFillSymbol(esri.symbol.SimpleFillSymbol.STYLE_SOLID,lineSymbol,new dojo.Color([255,0,0,0.4]));
-        
-        var initExtent = esri.geometry.geographicToWebMercator(new esri.geometry.Extent(-100,40,-75,55));
-        map = new esri.Map("mapdiv",{extent:initExtent});
-        var layer = new esri.layers.ArcGISTiledMapServiceLayer("http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer",
-        {
-          opacity:0.6
-        });
-        map.addLayer(layer);
-      }
-      
-      /**
-       * Makes an ESRI Javascript graphic from a feature so can add ot to the map
-       */
-      function makeGraphicFromFeature(esriFeature)
-      {
-        var geom,graphic;
-        if (! esriFeature.geometry)
-        {
-          return graphic;
-        }
-        var infoTemp = new esri.InfoTemplate("Attributes","${*}");
-        if (esriFeature.geometry)
-        {
-          switch(esriFeature.geometry.type)
-          {
-            case "esriGeometryPoint":
-              geom = esri.geometry.geographicToWebMercator(new esri.geometry.Point(esriFeature.geometry));
-              graphic = new esri.Graphic(geom,ptSymbol,esriFeature.attributes,infoTemp);
-              break;
-            case "esriGeometryMultiPoint":
-              geom = esri.geometry.geographicToWebMercator(new esri.geometry.MultiPoint(esriFeature.geometry));
-              graphic = new esri.Graphic(geom,ptSymbol,esriFeature.attributes,infoTemp);
-              break;
-            case "esriGeometryPolyline":
-              //var testgeom = new esri.geometry.Polyline(esriFeature.geometry);
-              //var testgeomWM = esri.geometry.geographicToWebMercator(testgeom);
-              geom = esri.geometry.geographicToWebMercator(new esri.geometry.Polyline(esriFeature.geometry));
-              graphic = new esri.Graphic(geom,lineSymbol,esriFeature.attributes,infoTemp);
-              break;
-            case "esriGeometryPolygon":
-              geom = esri.geometry.geographicToWebMercator(new esri.geometry.Polygon(esriFeature.geometry));
-              graphic = new esri.Graphic(geom,polySymbol,esriFeature.attributes,infoTemp);
-              break;
-          }
-        }
-        return graphic;
-      }
-      
-      function doTest()
-      {
-        map.graphics.clear();
-        var elem = document.getElementById("selType");
-        var geoJsonObject;
-        //alert(elem[elem.selectedIndex].value);
-        switch(elem[elem.selectedIndex].value)
-        {
-          case "Point":
-            geoJsonObject = getTestPoint();
-            break;
-          case "Line":
-            geoJsonObject = getTestPolyline();
-            break;
-          case "Polygon":
-            geoJsonObject = getTestPoly();
-            break;
-          case "Donut":
-            geoJsonObject = getTestPolyHole();
-            break;
-          case "Collection":
-            geoJsonObject = getTestCollection();
-            break;
-        }
-        
-        var feats = geoJsonObject.features;
-        var feat1 = feats[0];
-        var esriFeat = jsonconverter.gcFeatureToEsriFeature(feat1);
-        var graphic = makeGraphicFromFeature(esriFeat);
-        if (graphic)
-        {
-           map.graphics.add(graphic);
-        }
-      }
-      
-      function getTestPolyline()
-      {
-        return {
-          "next_feature": "1",
-          "type": "FeatureCollection",
-          "start": 0,
-          "features": [{
-            "type": "Feature",
-            "id": "a73ws67n775q",
-            "geometry": {
-              "type": "LineString",
-              "coordinates": [
-                [-89, 43],
-                [-88, 44],
-                [-88, 45]
-              ]
-            },
-            "properties": {
-              "InLine_FID": 0,
-              "SimLnFLag": 0
-            }
-          }],
-          "sort": null,
-          "page": 0,
-          "count": 2073,
-          "limit": 1
-        };
-      }
-      
-      function getTestPoint()
-      {
-        return {
-          "next_feature": "1",
-          "type": "FeatureCollection",
-          "start": 0,
-          "features": [{
-            "type": "Feature",
-            "id": "a7vs0i9rnyyx",
-            "geometry": {
-              "type": "Point",
-              "coordinates": [-89, 44]
-            },
-            "properties": {
-              "fax": "305-571-8347",
-              "phone": "305-571-8345"
-            }
-          }],
-          "sort": null,
-          "page": 0,
-          "count": 236,
-          "limit": 1
-        };
-      }
-      
-      function getTestPointNull()
-      {
-        return {
-          "next_feature": "1",
-          "type": "FeatureCollection",
-          "start": 0,
-          "features": [{
-            "type": "Feature",
-            "id": "a7vs0i9rnyyx",
-            "properties": {
-              "fax": "305-571-8347",
-              "phone": "305-571-8345"
-            }
-          }],
-          "sort": null,
-          "page": 0,
-          "count": 236,
-          "limit": 1
-        };
-      }
-      
-      function getTestPoly()
-      {
-        return {
-          "next_feature": "1",
-          "type": "FeatureCollection",
-          "start": 0,
-          "features": [{
-            "type": "Feature",
-            "id": "a7ws7wldxold",
-            "geometry": {
-              "type": "Polygon",
-              "coordinates": [
-                [
-                  [-89,42],[-89,50],[-80,50],[-80,42],[-89,42]
-                ]
-              ]
-            },
-            "properties": {
-              "DIST_NUM": 7.0,
-              "LOCATION": "Bustleton Ave. & Bowler St",
-              "PHONE": "686-3070",
-              "DIST_NUMC": "07",
-              "DIV_CODE": "NEPD",
-              "AREA_SQMI": 12.41643
-            }
-          }],
-          "sort": null,
-          "page": 0,
-          "count": 25,
-          "limit": 1
-        };
-      }
-      
-      function getTestPolyHole()
-      {
-        return {
-          "next_feature": "1",
-          "type": "FeatureCollection",
-          "start": 0,
-          "features": [{
-            "type": "Feature",
-            "id": "a7ws7wldxold",
-            "geometry": {
-              "type": "Polygon",
-              "coordinates": [
-                [
-                  [-89,42],[-89,50],[-80,50],[-80,42],[-89,42]
-                ],[[-87,44],[-82,44],[-82,48],[-87,48],[-87,44]]
-              ]
-            },
-            "properties": {
-              "DIST_NUM": 7.0,
-              "LOCATION": "Bustleton Ave. & Bowler St",
-              "PHONE": "686-3070",
-              "DIST_NUMC": "07",
-              "DIV_CODE": "NEPD",
-              "AREA_SQMI": 12.41643
-            }
-          }],
-          "sort": null,
-          "page": 0,
-          "count": 25,
-          "limit": 1
-        };
-      }
-      
-      function getTestCollection()
-      {
-        return {
-          "next_feature": "1",
-          "type": "FeatureCollection",
-          "start": 0,
-          "features": [{
-            "type": "Feature",
-            "id": "a7xlmuwyjioy",
-            "geometry": {
-              "type": "GeometryCollection",
-              "geometries": [{
-                "type": "Polygon",
-                "coordinates": [
-                  [[-95,43],[-95,50],[-90,50],[-91,42],[-95,43]]
-                ]
-              }, {
-                "type": "Polygon",
-                "coordinates": [
-                  [[-89,42],[-89,50],[-80,50],[-80,42],[-89,42]]
-                ]
-              },{
-                "type": "Point",
-                "coordinates":[-94,46]
-            }]},
-            "properties": {
-              "STATE_ABBR": "ZZ",
-              "STATE_NAME": "Top",
-            }
-          }],
-          "sort": null,
-          "page": 0,
-          "count": 3,
-          "limit": 1
-        };
-      }
-      dojo.addOnLoad(init);
-      
+			var map, ptSymbol, lineSymbol, polySymbol, infoTemp, jsonconverter;
+			function init() {
+				jsonconverter = geojsontoesri();
+				ptSymbol = new esri.symbol.SimpleMarkerSymbol().setSize(10).setColor(new dojo.Color([255, 0, 0]));
+				lineSymbol = new esri.symbol.SimpleLineSymbol(esri.symbol.SimpleLineSymbol.STYLE_SOLID, new dojo.Color([255, 0, 0]), 3);
+				polySymbol = new esri.symbol.SimpleFillSymbol(esri.symbol.SimpleFillSymbol.STYLE_SOLID, lineSymbol, new dojo.Color([255, 0, 0, 0.4]));
+
+				var initExtent = esri.geometry.geographicToWebMercator(new esri.geometry.Extent(-100, 40, -75, 55));
+				map = new esri.Map("mapdiv", {
+					extent : initExtent
+				});
+				var layer = new esri.layers.ArcGISTiledMapServiceLayer("http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer", {
+					opacity : 0.6
+				});
+				map.addLayer(layer);
+			}
+
+			/**
+			 * Makes an ESRI Javascript graphic from a feature so can add ot to the map
+			 */
+			function makeGraphicFromFeature(esriFeature) {
+				var geom, graphic;
+				if (!esriFeature.geometry) {
+					return graphic;
+				}
+				var infoTemp = new esri.InfoTemplate("Attributes", "${*}");
+				if (esriFeature.geometry) {
+					switch(esriFeature.geometry.type) {
+						case "esriGeometryPoint":
+							geom = esri.geometry.geographicToWebMercator(new esri.geometry.Point(esriFeature.geometry));
+							graphic = new esri.Graphic(geom, ptSymbol, esriFeature.attributes, infoTemp);
+							break;
+						case "esriGeometryMultiPoint":
+							geom = esri.geometry.geographicToWebMercator(new esri.geometry.MultiPoint(esriFeature.geometry));
+							graphic = new esri.Graphic(geom, ptSymbol, esriFeature.attributes, infoTemp);
+							break;
+						case "esriGeometryPolyline":
+							//var testgeom = new esri.geometry.Polyline(esriFeature.geometry);
+							//var testgeomWM = esri.geometry.geographicToWebMercator(testgeom);
+							geom = esri.geometry.geographicToWebMercator(new esri.geometry.Polyline(esriFeature.geometry));
+							graphic = new esri.Graphic(geom, lineSymbol, esriFeature.attributes, infoTemp);
+							break;
+						case "esriGeometryPolygon":
+							geom = esri.geometry.geographicToWebMercator(new esri.geometry.Polygon(esriFeature.geometry));
+							graphic = new esri.Graphic(geom, polySymbol, esriFeature.attributes, infoTemp);
+							break;
+					}
+				}
+				return graphic;
+			}
+
+			function doTest() {
+				map.graphics.clear();
+				var elem = document.getElementById("selType");
+				var geoJsonObject;
+				//alert(elem[elem.selectedIndex].value);
+				switch(elem[elem.selectedIndex].value) {
+					case "Point":
+						geoJsonObject = getTestPoint();
+						break;
+					case "Line":
+						geoJsonObject = getTestPolyline();
+						break;
+					case "Polygon":
+						geoJsonObject = getTestPoly();
+						break;
+					case "Donut":
+						geoJsonObject = getTestPolyHole();
+						break;
+					case "Collection":
+						geoJsonObject = getTestCollection();
+						break;
+				}
+
+				var feats = geoJsonObject.features;
+				var feat1 = feats[0];
+				var esriFeat = jsonconverter.gcFeatureToEsriFeature(feat1);
+				var graphic = makeGraphicFromFeature(esriFeat);
+				if (graphic) {
+					map.graphics.add(graphic);
+				}
+			}
+
+			function getTestPolyline() {
+				return {
+					"next_feature" : "1",
+					"type" : "FeatureCollection",
+					"start" : 0,
+					"features" : [{
+						"type" : "Feature",
+						"id" : "a73ws67n775q",
+						"geometry" : {
+							"type" : "LineString",
+							"coordinates" : [[-89, 43], [-88, 44], [-88, 45]]
+						},
+						"properties" : {
+							"InLine_FID" : 0,
+							"SimLnFLag" : 0
+						}
+					}],
+					"sort" : null,
+					"page" : 0,
+					"count" : 2073,
+					"limit" : 1
+				};
+			}
+
+			function getTestPoint() {
+				return {
+					"next_feature" : "1",
+					"type" : "FeatureCollection",
+					"start" : 0,
+					"features" : [{
+						"type" : "Feature",
+						"id" : "a7vs0i9rnyyx",
+						"geometry" : {
+							"type" : "Point",
+							"coordinates" : [-89, 44]
+						},
+						"properties" : {
+							"fax" : "305-571-8347",
+							"phone" : "305-571-8345"
+						}
+					}],
+					"sort" : null,
+					"page" : 0,
+					"count" : 236,
+					"limit" : 1
+				};
+			}
+
+			function getTestPointNull() {
+				return {
+					"next_feature" : "1",
+					"type" : "FeatureCollection",
+					"start" : 0,
+					"features" : [{
+						"type" : "Feature",
+						"id" : "a7vs0i9rnyyx",
+						"properties" : {
+							"fax" : "305-571-8347",
+							"phone" : "305-571-8345"
+						}
+					}],
+					"sort" : null,
+					"page" : 0,
+					"count" : 236,
+					"limit" : 1
+				};
+			}
+
+			function getTestPoly() {
+				return {
+					"next_feature" : "1",
+					"type" : "FeatureCollection",
+					"start" : 0,
+					"features" : [{
+						"type" : "Feature",
+						"id" : "a7ws7wldxold",
+						"geometry" : {
+							"type" : "Polygon",
+							"coordinates" : [[[-89, 42], [-89, 50], [-80, 50], [-80, 42], [-89, 42]]]
+						},
+						"properties" : {
+							"DIST_NUM" : 7.0,
+							"LOCATION" : "Bustleton Ave. & Bowler St",
+							"PHONE" : "686-3070",
+							"DIST_NUMC" : "07",
+							"DIV_CODE" : "NEPD",
+							"AREA_SQMI" : 12.41643
+						}
+					}],
+					"sort" : null,
+					"page" : 0,
+					"count" : 25,
+					"limit" : 1
+				};
+			}
+
+			function getTestPolyHole() {
+				return {
+					"next_feature" : "1",
+					"type" : "FeatureCollection",
+					"start" : 0,
+					"features" : [{
+						"type" : "Feature",
+						"id" : "a7ws7wldxold",
+						"geometry" : {
+							"type" : "Polygon",
+							"coordinates" : [[[-89, 42], [-89, 50], [-80, 50], [-80, 42], [-89, 42]], [[-87, 44], [-82, 44], [-82, 48], [-87, 48], [-87, 44]]]
+						},
+						"properties" : {
+							"DIST_NUM" : 7.0,
+							"LOCATION" : "Bustleton Ave. & Bowler St",
+							"PHONE" : "686-3070",
+							"DIST_NUMC" : "07",
+							"DIV_CODE" : "NEPD",
+							"AREA_SQMI" : 12.41643
+						}
+					}],
+					"sort" : null,
+					"page" : 0,
+					"count" : 25,
+					"limit" : 1
+				};
+			}
+
+			function getTestCollection() {
+				return {
+					"next_feature" : "1",
+					"type" : "FeatureCollection",
+					"start" : 0,
+					"features" : [{
+						"type" : "Feature",
+						"id" : "a7xlmuwyjioy",
+						"geometry" : {
+							"type" : "GeometryCollection",
+							"geometries" : [{
+								"type" : "Polygon",
+								"coordinates" : [[[-95, 43], [-95, 50], [-90, 50], [-91, 42], [-95, 43]]]
+							}, {
+								"type" : "Polygon",
+								"coordinates" : [[[-89, 42], [-89, 50], [-80, 50], [-80, 42], [-89, 42]]]
+							}, {
+								"type" : "Point",
+								"coordinates" : [-94, 46]
+							}]
+						},
+						"properties" : {
+							"STATE_ABBR" : "ZZ",
+							"STATE_NAME" : "Top",
+						}
+					}],
+					"sort" : null,
+					"page" : 0,
+					"count" : 3,
+					"limit" : 1
+				};
+			}
+
+
+			dojo.addOnLoad(init);
+
     </script>
   </head>
   <body class="claro">

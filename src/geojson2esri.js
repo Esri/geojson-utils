@@ -126,7 +126,7 @@ function geojsontoesri() {
    * Input parameter is a GeoJSON geometry object.
    */
   jcon.gcGeometryToEsriGeometry = function(gcGeom) {
-      var esriGeometry, esriGeomInfo, gcGeometriesToConvert, i;
+      var esriGeometry, esriGeomInfo, gcGeometriesToConvert, i, g, coords;
 
       //if geometry collection, get info about first geometry in collection
       if (gcGeom.type === "GeometryCollection") {
@@ -169,7 +169,6 @@ function geojsontoesri() {
               esriGeometry.y = gcGeometriesToConvert[0].coordinates[1];
           }
       } else {
-          var g, coords;
           esriGeometry[esriGeomInfo.geomHolder] = [];
           for ( i = 0; i < gcGeometriesToConvert.length; i++) {
               coords = jcon.gcCoordinatesToEsriCoordinates(gcGeometriesToConvert[i]);

@@ -9,7 +9,8 @@
  * to ESRI REST features so they could be put on an ESRI javascript API map. Geocommons only
  * returns features in WGS84 using decimal degrees, so no check is made for the spatial
  * reference of the GeoJSON geometries.
- */"use strict";
+ */
+"use strict";
 
 /**
  * Take a GeoJSON geometry type and make an object that has information about
@@ -22,40 +23,41 @@
  * Input is a GeoJSON geometry type - Point,LineString,Polygon, etc
  *
  */
+
 function geojsontoesri() {
-	var jcon = {};
+  var jcon = {};
 
   function isCompatible(esriGeomType, gcGeomType) {
-      var compatible = false;
-      if ((esriGeomType === "esriGeometryPoint" || esriGeomType === "esriGeometryMultipoint") && (gcGeomType === "Point" || gcGeomType === "MultiPoint")) {
-          compatible = true;
-      } else if (esriGeomType === "esriGeometryPolyline" && (gcGeomType === "LineString" || gcGeomType === "MultiLineString")) {
-          compatible = true;
-      } else if (esriGeomType === "esriGeometryPolygon" && (gcGeomType === "Polygon" || gcGeomType === "MultiPolygon")) {
-          compatible = true;
-      }
-      return compatible;
+    var compatible = false;
+    if ((esriGeomType === "esriGeometryPoint" || esriGeomType === "esriGeometryMultipoint") && (gcGeomType === "Point" || gcGeomType === "MultiPoint")) {
+      compatible = true;
+    } else if (esriGeomType === "esriGeometryPolyline" && (gcGeomType === "LineString" || gcGeomType === "MultiLineString")) {
+      compatible = true;
+    } else if (esriGeomType === "esriGeometryPolygon" && (gcGeomType === "Polygon" || gcGeomType === "MultiPolygon")) {
+      compatible = true;
+    }
+    return compatible;
   }
 
 
   jcon.gcGeomTypeToEsriGeomInfo = function(gcType) {
-      var esriType, geomHolderId, compatibilityFunction;
-      if (gcType === "Point") {
-          esriType = "esriGeometryPoint";
-      } else if (gcType === "MultiPoint") {
-          esriType = "esriGeometryMultipoint";
-          geomHolderId = "points";
-      } else if (gcType === "LineString" || gcType === "MultiLineString") {
-          esriType = "esriGeometryPolyline";
-          geomHolderId = "paths";
-      } else if (gcType === "Polygon" || gcType === "MultiPolygon") {
-          esriType = "esriGeometryPolygon";
-          geomHolderId = "rings";
-      }
-      return {
-          type : esriType,
-          geomHolder : geomHolderId
-      };
+    var esriType, geomHolderId, compatibilityFunction;
+    if (gcType === "Point") {
+      esriType = "esriGeometryPoint";
+    } else if (gcType === "MultiPoint") {
+      esriType = "esriGeometryMultipoint";
+      geomHolderId = "points";
+    } else if (gcType === "LineString" || gcType === "MultiLineString") {
+      esriType = "esriGeometryPolyline";
+      geomHolderId = "paths";
+    } else if (gcType === "Polygon" || gcType === "MultiPolygon") {
+      esriType = "esriGeometryPolygon";
+      geomHolderId = "rings";
+    }
+    return {
+      type: esriType,
+      geomHolder: geomHolderId
+    };
   };
 
   /**
@@ -64,7 +66,7 @@ function geojsontoesri() {
    * This code assumes inner rings are oriented counterclockwise, so the checks are not included.
    */
 
-  /*function makeInnerRing(inArrayOfPoints)
+/*function makeInnerRing(inArrayOfPoints)
   {
   var ring;
   function ringIsClockwise(ringToTest)
@@ -99,23 +101,22 @@ function geojsontoesri() {
   /**
    Wraps GeoJSON coordinates in an array if necessary so code can iterate
    through array of points, rings, or lines and add them to an ESRI geometry
-
    * Input is a GeoJSON geometry object. A GeoJSON GeometryCollection is not a
    * valid input */
   jcon.gcCoordinatesToEsriCoordinates = function(gcGeom) {
-      var i, esriCoords;
-      if (gcGeom.type === "MultiPoint" || gcGeom.type === "MultiLineString" || gcGeom.type === "Polygon") {
-          esriCoords = gcGeom.coordinates;
-      } else if (gcGeom.type === "Point" || gcGeom.type === "LineString") {
-          esriCoords = [gcGeom.coordinates];
-      } else if (gcGeom.type === "MultiPolygon") {
-          esriCoords = [];
-          for ( i = 0; i < gcGeom.coordinates.length; i++) {
-              esriCoords.push(gcGeom.coordinates[i]);
-          }
+    var i, esriCoords;
+    if (gcGeom.type === "MultiPoint" || gcGeom.type === "MultiLineString" || gcGeom.type === "Polygon") {
+      esriCoords = gcGeom.coordinates;
+    } else if (gcGeom.type === "Point" || gcGeom.type === "LineString") {
+      esriCoords = [gcGeom.coordinates];
+    } else if (gcGeom.type === "MultiPolygon") {
+      esriCoords = [];
+      for (i = 0; i < gcGeom.coordinates.length; i++) {
+        esriCoords.push(gcGeom.coordinates[i]);
       }
-      return esriCoords;
-	};
+    }
+    return esriCoords;
+  };
 
   /**
    * Converts GeoJSON geometry to ESRI geometry. The ESRI geometry is
@@ -126,58 +127,58 @@ function geojsontoesri() {
    * Input parameter is a GeoJSON geometry object.
    */
   jcon.gcGeometryToEsriGeometry = function(gcGeom) {
-      var esriGeometry, esriGeomInfo, gcGeometriesToConvert, i, g, coords;
+    var esriGeometry, esriGeomInfo, gcGeometriesToConvert, i, g, coords;
 
-      //if geometry collection, get info about first geometry in collection
-      if (gcGeom.type === "GeometryCollection") {
-          gcGeometriesToConvert = [gcGeom.geometries.shift()];
-          esriGeomInfo = jcon.gcGeomTypeToEsriGeomInfo(gcGeometriesToConvert[0].type);
+    //if geometry collection, get info about first geometry in collection
+    if (gcGeom.type === "GeometryCollection") {
+      gcGeometriesToConvert = [gcGeom.geometries.shift()];
+      esriGeomInfo = jcon.gcGeomTypeToEsriGeomInfo(gcGeometriesToConvert[0].type);
 
-          //loop through collection and only add compatible geometries to the array
-          //of geometries that will be converted
-          for ( i = 0; i < gcGeom.geometries.length; i++) {
-              if (isCompatible(esriGeomInfo.type, gcGeom.geometries[i].type)) {
-                  gcGeometriesToConvert.push(gcGeom.geometries[i]);
-              }
-          }
+      //loop through collection and only add compatible geometries to the array
+      //of geometries that will be converted
+      for (i = 0; i < gcGeom.geometries.length; i++) {
+        if (isCompatible(esriGeomInfo.type, gcGeom.geometries[i].type)) {
+          gcGeometriesToConvert.push(gcGeom.geometries[i]);
+        }
+      }
+    } else {
+      esriGeomInfo = jcon.gcGeomTypeToEsriGeomInfo(gcGeom.type);
+      gcGeometriesToConvert = [gcGeom];
+    }
+
+    //if a collection contained multiple points, change the ESRI geometry
+    //type to MultiPoint
+    if (esriGeomInfo.type === "esriGeometryPoint" && gcGeometriesToConvert.length > 1) {
+      esriGeomInfo = jcon.gcGeomTypeToEsriGeomInfo("MultiPoint");
+    }
+
+    //make new empty ESRI geometry object
+    esriGeometry = {
+      type: esriGeomInfo.type,
+      spatialReference: {
+        wkid: 4326
+      }
+    };
+
+    //perform conversion
+    if (esriGeomInfo.type === "esriGeometryPoint") {
+      if (gcGeometriesToConvert[0].coordinates.length === 0) {
+        esriGeometry.x = null;
+        esriGeometry.y = null;
       } else {
-          esriGeomInfo = jcon.gcGeomTypeToEsriGeomInfo(gcGeom.type);
-          gcGeometriesToConvert = [gcGeom];
+        esriGeometry.x = gcGeometriesToConvert[0].coordinates[0];
+        esriGeometry.y = gcGeometriesToConvert[0].coordinates[1];
       }
-
-      //if a collection contained multiple points, change the ESRI geometry
-      //type to MultiPoint
-      if (esriGeomInfo.type === "esriGeometryPoint" && gcGeometriesToConvert.length > 1) {
-          esriGeomInfo = jcon.gcGeomTypeToEsriGeomInfo("MultiPoint");
+    } else {
+      esriGeometry[esriGeomInfo.geomHolder] = [];
+      for (i = 0; i < gcGeometriesToConvert.length; i++) {
+        coords = jcon.gcCoordinatesToEsriCoordinates(gcGeometriesToConvert[i]);
+        for (g = 0; g < coords.length; g++) {
+          esriGeometry[esriGeomInfo.geomHolder].push(coords[g]);
+        }
       }
-
-      //make new empty ESRI geometry object
-      esriGeometry = {
-          type : esriGeomInfo.type,
-          spatialReference : {
-              wkid : 4326
-          }
-      };
-
-      //perform conversion
-      if (esriGeomInfo.type === "esriGeometryPoint") {
-          if (gcGeometriesToConvert[0].coordinates.length === 0) {
-              esriGeometry.x = null;
-              esriGeometry.y = null;
-          } else {
-              esriGeometry.x = gcGeometriesToConvert[0].coordinates[0];
-              esriGeometry.y = gcGeometriesToConvert[0].coordinates[1];
-          }
-      } else {
-          esriGeometry[esriGeomInfo.geomHolder] = [];
-          for ( i = 0; i < gcGeometriesToConvert.length; i++) {
-              coords = jcon.gcCoordinatesToEsriCoordinates(gcGeometriesToConvert[i]);
-              for ( g = 0; g < coords.length; g++) {
-                  esriGeometry[esriGeomInfo.geomHolder].push(coords[g]);
-              }
-          }
-      }
-      return esriGeometry;
+    }
+    return esriGeometry;
   };
 
   /**
@@ -185,21 +186,22 @@ function geojsontoesri() {
    * Input parameter is a GeoJSON Feature object
    */
   jcon.gcFeatureToEsriFeature = function(gcFeature) {
-      var esriFeat = null, prop;
-      if (gcFeature) {
-          esriFeat = {};
-          if (gcFeature.geometry) {
-              esriFeat.geometry = jcon.gcGeometryToEsriGeometry(gcFeature.geometry);
-          }
-          if (gcFeature.properties) {
-              var esriAttribs = {};
-              for (prop in gcFeature.properties) {
-                  esriAttribs[prop] = gcFeature.properties[prop];
-              }
-              esriFeat.attributes = esriAttribs;
-          }
+    var esriFeat = null,
+        prop;
+    if (gcFeature) {
+      esriFeat = {};
+      if (gcFeature.geometry) {
+        esriFeat.geometry = jcon.gcGeometryToEsriGeometry(gcFeature.geometry);
       }
-      return esriFeat;
+      if (gcFeature.properties) {
+        var esriAttribs = {};
+        for (prop in gcFeature.properties) {
+          esriAttribs[prop] = gcFeature.properties[prop];
+        }
+        esriFeat.attributes = esriAttribs;
+      }
+    }
+    return esriFeat;
   };
   return jcon;
 }

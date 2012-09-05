@@ -5,7 +5,7 @@
 /**
  * Utilities to convert a GeoJSON Feature to an ESRI REST Feature. Both are similar,
  * but have different formats for geometries.
- * 
+ *
  * This code was written to convert features queried from a Geocommons (www.geocommons.com) dataset
  * to ESRI REST features so they could be put on an ESRI javascript API map. Geocommons only
  * returns features in WGS84 using decimal degrees, so no check is made for the spatial
@@ -14,15 +14,15 @@
 "use strict";
 
 /**
- * Take a GeoJSON geometry type and make an object that has information about 
+ * Take a GeoJSON geometry type and make an object that has information about
  * what the ESRI geometry should hold. Includes the ESRI geometry type, the name
  * of the member that holds coordinate information, and a function that compares
  * a GeoJSON geometry type and ESRI geometry type to see if they can be safely
- * put together in a single ESRI feature. ESRI features must only have one 
+ * put together in a single ESRI feature. ESRI features must only have one
  * geometry type, point, line, polygon
- * 
+ *
  * Input is a GeoJSON geometry type - Point,LineString,Polygon, etc
- * 
+ *
  */
 function geojson2esri() {
   var jcon = {};
@@ -63,7 +63,6 @@ function geojson2esri() {
     };
   }; 
 
-
   /**
    Wraps GeoJSON coordinates in an array if necessary so code can iterate
    through array of points, rings, or lines and add them to an ESRI geometry
@@ -86,6 +85,7 @@ function geojson2esri() {
     return esriCoords;
   };
   
+
   /**
    * Converts GeoJSON geometry to ESRI geometry. The ESRI geometry is
    * only allowed to contain one type of geometry, so if the GeoJSON
@@ -171,6 +171,5 @@ function geojson2esri() {
     }
     return esriFeat;
   };
-
   return jcon;
 }

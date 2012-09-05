@@ -80,7 +80,7 @@
           map.removeLayer(geoJsonLayer)
         }
         
-        var elem = document.getElementById("selType"), esriObject, symbol;
+        var elem = document.getElementById("selType"), esriObject, symbol, gcFeats;
         switch(elem[elem.selectedIndex].value) {
           case "Point":
             esriObject = getTestPoint();
@@ -108,12 +108,10 @@
           return undefined;
         }
         
-        var feats = esriObject.features;
-        var feat1 = feats[0];
-        var gcFeat = jsonconverter.esriFeatureToGcFeature(feat1);
-        if (gcFeat && gcFeat.geometry){
-          symbol = getAppropriateStyle(gcFeat.geometry.type);
-          geoJsonLayer = L.geoJson(gcFeat,{
+        gcFeats = jsonconverter.esriFeaturesetToGeojsonFeatureCollection(esriObject);
+        if (gcFeats && gcFeats.features && gcFeats.features.length > 0){
+          symbol = getAppropriateStyle(gcFeats.features[0].geometry.type);
+          geoJsonLayer = L.geoJson(gcFeats,{
             style: symbol,
             onEachFeature: onEachFeature,
             pointToLayer: function(feature,latlng){

@@ -113,7 +113,9 @@ function esritogeojson() {
     }
     return gcFeat;
   };
-
+	
+	/*Converts ESRI Rest Featureset to GeoJSON Feature Collection
+	 Input is ESRI Featureset*/
   jcon.esriFeaturesetToGeojsonFeatureCollection = function(esriFS) {
     var gcColl, i, esriFeats, gcFeat;
     if (esriFS && esriFS.features) {

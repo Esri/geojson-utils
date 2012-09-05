@@ -1,0 +1,769 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Map ESRI REST Features on Leaflet</title>
+    <meta name="author" content="James Cardona" />
+    <!-- Date: 2012-08-31 -->
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4/leaflet.css" />
+    '
+    <script src="http://code.jquery.com/jquery-1.8.0.min.js"></script>
+    <script src="http://cdn.leafletjs.com/leaflet-0.4/leaflet.js"></script>
+    <script type="text/javascript" src="../src/esri2geojson.js"></script>
+    <script type="text/javascript">
+      var map, ptSymbol, lineSymbol, polySymbol, jsonconverter, geoJsonLayer;
+      
+      //default symbols for features
+      ptSymbol = {
+        radius: 8,
+        fillColor: "#ff7800",
+        color: "#000",
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.8
+      };
+      
+      lineSymbol = {
+        "color": "#ff0000",
+        "weight": 4,
+        "opacity": 0.7
+      };
+      
+      polySymbol = {
+        "fillColor": "#ff7800",
+        "color": "#000",
+        "weight": 1,
+        "opacity": 1,
+        "fillOpacity": 0.8
+      };
+      
+      //get style object for line or polygon
+      function getAppropriateStyle(geomType){
+        var s;
+        if (geomType === "LineString" || geomType === "MultiLineString"){
+          s = lineSymbol;
+        }
+        else if (geomType === "Polygon" || geomType === "MultiPolygon"){
+          s = polySymbol;
+        }
+        return s;
+      }
+      
+      //function to set popup for feature
+      function onEachFeature(feature, layer) {
+        var popupContent = "", prop;
+        if (feature.properties) {
+          for(prop in feature.properties){
+            popupContent += "<p>" + prop + ": " + feature.properties[prop] + "</p>";
+          }
+        }
+        layer.bindPopup(popupContent);
+      }
+      
+      //make initial map with tile layer. Leaflet sets centerpoint of map using lat (y),long (x) not x,y
+      $(document).ready(function(){
+        jsonconverter = esritogeojson();
+        
+        
+        map = L.map("map").setView([37,-95], 4);
+        L.tileLayer("http://acetate.geoiq.com/tiles/acetate/{z}/{x}/{y}.png", {
+          attribution: "Map data <a href='http://geocommons.com'>Geocommons</a>",
+          maxZoom: 18
+          }).addTo(map);
+      });
+      
+      //fetch sample features, convert to geojson, and map them
+      function doTest() {
+        if (geoJsonLayer){
+          map.removeLayer(geoJsonLayer)
+        }
+        
+        var elem = document.getElementById("selType"), esriObject, symbol, gcFeats;
+        switch(elem[elem.selectedIndex].value) {
+          case "Point":
+            esriObject = getTestPoint();
+            break;
+          case "MultiPoint":
+            esriObject = getTestMultipoint();
+            break;
+          case "Line":
+            esriObject = getTestPolyline();
+            break;
+          case "MultiLine":
+            esriObject = getTestPolylineMultipart();
+            break;
+          case "Polygon":
+            esriObject = getTestPoly();
+            break;
+          case "Donut":
+            esriObject = getTestPolyHole();
+            break;
+          case "MultiPolygon":
+            esriObject = getTestPolyMultipart();
+            break;
+        }
+        if (!esriObject){
+          return undefined;
+        }
+        
+        gcFeats = jsonconverter.esriFeaturesetToGeojsonFeatureCollection(esriObject);
+        if (gcFeats && gcFeats.features && gcFeats.features.length > 0){
+          symbol = getAppropriateStyle(gcFeats.features[0].geometry.type);
+          geoJsonLayer = L.geoJson(gcFeats,{
+            style: symbol,
+            onEachFeature: onEachFeature,
+            pointToLayer: function(feature,latlng){
+              return L.circleMarker(latlng,ptSymbol);
+            }
+          });
+          geoJsonLayer.addTo(map);
+        }
+      }
+      
+      //functions to return sample ESRI REST feature collections
+      function getTestPoint() {
+        return {
+         "displayFieldName": "comment",
+         "fieldAliases": {
+          "OBJECTID": "OBJECTID",
+          "comment": "comment"
+         },
+         "geometryType": "esriGeometryPoint",
+         "spatialReference": {
+          "wkid": 4326,
+          "latestWkid": 4326
+         },
+         "fields": [
+          {
+           "name": "OBJECTID",
+           "type": "esriFieldTypeOID",
+           "alias": "OBJECTID"
+          },
+          {
+           "name": "comment",
+           "type": "esriFieldTypeString",
+           "alias": "comment",
+           "length": 50
+          }
+         ],
+         "features": [
+          {
+           "attributes": {
+            "OBJECTID": 1,
+            "comment": "single point"
+           },
+           "geometry": {
+            "x": -112.51369763299999,
+            "y": 36.903279658000031
+           }
+          },
+          {
+           "attributes": {
+            "OBJECTID": 2,
+            "comment": "single point"
+           },
+           "geometry": {
+            "x": -105.75944274699998,
+            "y": 35.648918037000044
+           }
+          },
+          {
+           "attributes": {
+            "OBJECTID": 3,
+            "comment": "single point"
+           },
+           "geometry": {
+            "x": -99.777102704999947,
+            "y": 38.929556124000044
+           }
+          }
+         ]
+        };
+      }
+      
+      function getTestMultipoint(){
+        return {
+         "displayFieldName": "comment",
+         "fieldAliases": {
+          "OBJECTID": "OBJECTID",
+          "comment": "comment"
+         },
+         "geometryType": "esriGeometryMultipoint",
+         "spatialReference": {
+          "wkid": 4326,
+          "latestWkid": 4326
+         },
+         "fields": [
+          {
+           "name": "OBJECTID",
+           "type": "esriFieldTypeOID",
+           "alias": "OBJECTID"
+          },
+          {
+           "name": "comment",
+           "type": "esriFieldTypeString",
+           "alias": "comment",
+           "length": 50
+          }
+         ],
+         "features": [
+          {
+           "attributes": {
+            "OBJECTID": 1,
+            "comment": "two part multi point"
+           },
+           "geometry": {
+            "points": [
+             [
+              -96.496464617999948,
+              39.315513546000034
+             ],
+             [
+              -95.049124285999937,
+              36.517322236000041
+             ]
+            ]
+           }
+          }
+         ]
+        };
+      }
+
+      function getTestPolyline() {
+        return {
+         "displayFieldName": "comment",
+         "fieldAliases": {
+          "OBJECTID": "OBJECTID",
+          "comment": "comment",
+          "SHAPE_Length": "SHAPE_Length"
+         },
+         "geometryType": "esriGeometryPolyline",
+         "spatialReference": {
+          "wkid": 4326,
+          "latestWkid": 4326
+         },
+         "fields": [
+          {
+           "name": "OBJECTID",
+           "type": "esriFieldTypeOID",
+           "alias": "OBJECTID"
+          },
+          {
+           "name": "comment",
+           "type": "esriFieldTypeString",
+           "alias": "comment",
+           "length": 50
+          },
+          {
+           "name": "SHAPE_Length",
+           "type": "esriFieldTypeDouble",
+           "alias": "SHAPE_Length"
+          }
+         ],
+         "features": [
+          {
+           "attributes": {
+            "OBJECTID": 1,
+            "comment": null,
+            "SHAPE_Length": 14.06660909310343
+           },
+           "geometry": {
+            "paths": [
+             [
+              [
+               -116.61876320599998,
+               31.045476568000026
+              ],
+              [
+               -111.31184865299997,
+               34.13313594400006
+              ],
+              [
+               -103.39972150099999,
+               33.650689167000053
+              ]
+             ]
+            ]
+           }
+          }
+         ]
+        };
+      }
+      
+      function getTestPolylineMultipart(){
+        return {
+         "displayFieldName": "comment",
+         "fieldAliases": {
+          "OBJECTID": "OBJECTID",
+          "comment": "comment",
+          "SHAPE_Length": "SHAPE_Length"
+         },
+         "geometryType": "esriGeometryPolyline",
+         "spatialReference": {
+          "wkid": 4326,
+          "latestWkid": 4326
+         },
+         "fields": [
+          {
+           "name": "OBJECTID",
+           "type": "esriFieldTypeOID",
+           "alias": "OBJECTID"
+          },
+          {
+           "name": "comment",
+           "type": "esriFieldTypeString",
+           "alias": "comment",
+           "length": 50
+          },
+          {
+           "name": "SHAPE_Length",
+           "type": "esriFieldTypeDouble",
+           "alias": "SHAPE_Length"
+          }
+         ],
+         "features": [
+          {
+           "attributes": {
+            "OBJECTID": 2,
+            "comment": "two part line",
+            "SHAPE_Length": 45.506808616042036
+           },
+           "geometry": {
+            "paths": [
+             [
+              [
+               -119.22397580399996,
+               33.264731745000063
+              ],
+              [
+               -112.85567834099999,
+               36.255901766000079
+              ],
+              [
+               -103.01376407899994,
+               35.966433699000049
+              ],
+              [
+               -103.20674278999996,
+               39.536539853000079
+              ],
+              [
+               -109.38206154299996,
+               39.536539853000079
+              ]
+             ],
+             [
+              [
+               -120.76780549299997,
+               36.738348543000029
+              ],
+              [
+               -116.61876320599998,
+               41.176858897000045
+              ],
+              [
+               -108.61014669799994,
+               42.141752452000048
+              ],
+              [
+               -103.88216827899998,
+               41.948773741000025
+              ]
+             ]
+            ]
+           }
+          }
+         ]
+        };
+      }
+
+      function getTestPoly() {
+        return {
+         "displayFieldName": "comment",
+         "fieldAliases": {
+          "OBJECTID": "OBJECTID",
+          "comment": "comment",
+          "SHAPE_Length": "SHAPE_Length",
+          "SHAPE_Area": "SHAPE_Area"
+         },
+         "geometryType": "esriGeometryPolygon",
+         "spatialReference": {
+          "wkid": 4326,
+          "latestWkid": 4326
+         },
+         "fields": [
+          {
+           "name": "OBJECTID",
+           "type": "esriFieldTypeOID",
+           "alias": "OBJECTID"
+          },
+          {
+           "name": "comment",
+           "type": "esriFieldTypeString",
+           "alias": "comment",
+           "length": 50
+          },
+          {
+           "name": "SHAPE_Length",
+           "type": "esriFieldTypeDouble",
+           "alias": "SHAPE_Length"
+          },
+          {
+           "name": "SHAPE_Area",
+           "type": "esriFieldTypeDouble",
+           "alias": "SHAPE_Area"
+          }
+         ],
+         "features": [
+          {
+           "attributes": {
+            "OBJECTID": 1,
+            "comment": "single ring",
+            "SHAPE_Length": 39.091716694263198,
+            "SHAPE_Area": 93.483675292406303
+           },
+           "geometry": {
+            "rings": [
+             [
+              [
+               -119.03099709299994,
+               46.387284094000051
+              ],
+              [
+               -111.31184865299997,
+               48.220581849000041
+              ],
+              [
+               -106.10142345499997,
+               43.010156651000045
+              ],
+              [
+               -113.43461447399994,
+               38.668135653000036
+              ],
+              [
+               -121.63620969199997,
+               39.922497275000069
+              ],
+              [
+               -119.03099709299994,
+               46.387284094000051
+              ]
+             ]
+            ]
+           }
+          }
+         ]
+        };
+      }
+
+      function getTestPolyHole() {
+        return {
+         "displayFieldName": "comment",
+         "fieldAliases": {
+          "OBJECTID": "OBJECTID",
+          "comment": "comment",
+          "SHAPE_Length": "SHAPE_Length",
+          "SHAPE_Area": "SHAPE_Area"
+         },
+         "geometryType": "esriGeometryPolygon",
+         "spatialReference": {
+          "wkid": 4326,
+          "latestWkid": 4326
+         },
+         "fields": [
+          {
+           "name": "OBJECTID",
+           "type": "esriFieldTypeOID",
+           "alias": "OBJECTID"
+          },
+          {
+           "name": "comment",
+           "type": "esriFieldTypeString",
+           "alias": "comment",
+           "length": 50
+          },
+          {
+           "name": "SHAPE_Length",
+           "type": "esriFieldTypeDouble",
+           "alias": "SHAPE_Length"
+          },
+          {
+           "name": "SHAPE_Area",
+           "type": "esriFieldTypeDouble",
+           "alias": "SHAPE_Area"
+          }
+         ],
+         "features": [
+          {
+           "attributes": {
+            "OBJECTID": 2,
+            "comment": "one outer two inner",
+            "SHAPE_Length": 71.925056583331951,
+            "SHAPE_Area": 125.1150652646341
+           },
+           "geometry": {
+            "rings": [
+             [
+              [
+               -100.11908341399999,
+               42.238241807000065
+              ],
+              [
+               -90.084190440999976,
+               42.527709874000038
+              ],
+              [
+               -93.461317883999982,
+               29.115689458000077
+              ],
+              [
+               -98.285785658999941,
+               25.642072660000053
+              ],
+              [
+               -102.62780665699995,
+               32.492816901000026
+              ],
+              [
+               -100.11908341399999,
+               42.238241807000065
+              ]
+             ],
+             [
+              [
+               -98.189296303999981,
+               40.694412119000049
+              ],
+              [
+               -99.443657924999968,
+               37.413774032000049
+              ],
+              [
+               -96.259509192999985,
+               38.282178231000046
+              ],
+              [
+               -95.487594348999949,
+               40.694412119000049
+              ],
+              [
+               -98.189296303999981,
+               40.694412119000049
+              ]
+             ],
+             [
+              [
+               -97.031424036999965,
+               33.843667878000076
+              ],
+              [
+               -97.417381458999955,
+               31.141965924000033
+              ],
+              [
+               -94.522700793999945,
+               33.168242389000056
+              ],
+              [
+               -94.715679504999969,
+               35.773454988000026
+              ],
+              [
+               -97.031424036999965,
+               33.843667878000076
+              ]
+             ]
+            ]
+           }
+          }
+         ]
+        };
+      }
+      
+      function getTestPolyMultipart(){
+        return {
+         "displayFieldName": "comment",
+         "fieldAliases": {
+          "OBJECTID": "OBJECTID",
+          "comment": "comment",
+          "SHAPE_Length": "SHAPE_Length",
+          "SHAPE_Area": "SHAPE_Area"
+         },
+         "geometryType": "esriGeometryPolygon",
+         "spatialReference": {
+          "wkid": 4326,
+          "latestWkid": 4326
+         },
+         "fields": [
+          {
+           "name": "OBJECTID",
+           "type": "esriFieldTypeOID",
+           "alias": "OBJECTID"
+          },
+          {
+           "name": "comment",
+           "type": "esriFieldTypeString",
+           "alias": "comment",
+           "length": 50
+          },
+          {
+           "name": "SHAPE_Length",
+           "type": "esriFieldTypeDouble",
+           "alias": "SHAPE_Length"
+          },
+          {
+           "name": "SHAPE_Area",
+           "type": "esriFieldTypeDouble",
+           "alias": "SHAPE_Area"
+          }
+         ],
+         "features": [
+          {
+           "attributes": {
+            "OBJECTID": 3,
+            "comment": "three outer two inner",
+            "SHAPE_Length": 121.4219991613185,
+            "SHAPE_Area": 156.42059840053369
+           },
+           "geometry": {
+            "rings": [
+             [
+              [
+               -84.970254598999986,
+               47.834624427000051
+              ],
+              [
+               -78.119510357999957,
+               48.220581849000041
+              ],
+              [
+               -80.049297467999963,
+               39.247071786000049
+              ],
+              [
+               -84.970254598999986,
+               37.027816610000059
+              ],
+              [
+               -84.970254598999986,
+               47.834624427000051
+              ]
+             ],
+             [
+              [
+               -102.91727472299999,
+               46.773241516000041
+              ],
+              [
+               -97.224402747999989,
+               48.799517982000054
+              ],
+              [
+               -97.224402747999989,
+               43.685582140000065
+              ],
+              [
+               -102.62780665699995,
+               43.203135362000069
+              ],
+              [
+               -102.91727472299999,
+               46.773241516000041
+              ]
+             ],
+             [
+              [
+               -94.522700793999945,
+               49.378454115000068
+              ],
+              [
+               -87.382488486999989,
+               49.281964759000061
+              ],
+              [
+               -87.671956552999973,
+               34.326114655000026
+              ],
+              [
+               -94.812168860999975,
+               37.220795321000026
+              ],
+              [
+               -94.522700793999945,
+               49.378454115000068
+              ]
+             ],
+             [
+              [
+               -91.820998839999959,
+               46.483773450000058
+              ],
+              [
+               -93.075360461999935,
+               43.299624718000075
+              ],
+              [
+               -90.084190440999976,
+               42.527709874000038
+              ],
+              [
+               -89.022807529999966,
+               46.676752161000081
+              ],
+              [
+               -91.820998839999959,
+               46.483773450000058
+              ]
+             ],
+             [
+              [
+               -92.689403039999945,
+               40.983880186000079
+              ],
+              [
+               -93.364828527999975,
+               37.606752743000072
+              ],
+              [
+               -90.470147862999966,
+               37.124305965000076
+              ],
+              [
+               -89.505254307999962,
+               40.887390830000072
+              ],
+              [
+               -92.689403039999945,
+               40.983880186000079
+              ]
+             ]
+            ]
+           }
+          }
+         ]
+        };
+      }
+
+    </script>
+  </head>
+  <body>
+    <div id="map" style="width: 800px;height: 400px">
+      
+    </div>
+    <div style="padding: 5px">
+      <select id="selType" onchange="doTest();">
+        <option>Select a geometry type</option>
+        <option value="Point">Point</option>
+        <option value="MultiPoint">MultiPoint</option>
+        <option value="Line">Line</option>
+        <option value="MultiLine">MultiLine</option>
+        <option value="Polygon">Polygon</option>
+        <option value="Donut">Donut Polygon</option>
+        <option value="MultiPolygon">MultiPolygon</option>
+      </select>
+    </div>
+  </body>
+</html>

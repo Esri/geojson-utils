@@ -10,11 +10,11 @@
     <link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.1/js/dojo/dijit/themes/claro/claro.css">
     <link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.1/js/esri/dijit/css/Popup.css">
     <script type="text/javascript" src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=3.1compact"></script>
-    <script type="text/javascript" src="../src/geojson2esri.js"></script>
+    <script type="text/javascript" src="../src/jsonConverters.js"></script>
     <script type="text/javascript">
       var map, ptSymbol, lineSymbol, polySymbol, infoTemp, jsonconverter;
       function init() {
-        jsonconverter = geojsontoesri();
+        jsonconverter = geoJsonConverter();
         ptSymbol = new esri.symbol.SimpleMarkerSymbol().setSize(10).setColor(new dojo.Color([255, 0, 0]));
         lineSymbol = new esri.symbol.SimpleLineSymbol(esri.symbol.SimpleLineSymbol.STYLE_SOLID, new dojo.Color([255, 0, 0]), 3);
         polySymbol = new esri.symbol.SimpleFillSymbol(esri.symbol.SimpleFillSymbol.STYLE_SOLID, lineSymbol, new dojo.Color([255, 0, 0, 0.4]));
@@ -49,8 +49,6 @@
               graphic = new esri.Graphic(geom, ptSymbol, esriFeature.attributes, infoTemp);
               break;
             case "esriGeometryPolyline":
-              //var testgeom = new esri.geometry.Polyline(esriFeature.geometry);
-              //var testgeomWM = esri.geometry.geographicToWebMercator(testgeom);
               geom = esri.geometry.geographicToWebMercator(new esri.geometry.Polyline(esriFeature.geometry));
               graphic = new esri.Graphic(geom, lineSymbol, esriFeature.attributes, infoTemp);
               break;
@@ -64,10 +62,16 @@
       }
 
       function doTest() {
+        var esriFeats,
+        feat,
+        i,
+        graphic,
+        elem,
+        geoJsonObject;
+        
         map.graphics.clear();
-        var elem = document.getElementById("selType");
-        var geoJsonObject;
-        //alert(elem[elem.selectedIndex].value);
+        elem = document.getElementById("selType");
+        geoJsonObject;
         switch(elem[elem.selectedIndex].value) {
           case "Point":
             geoJsonObject = getTestPoint();
@@ -86,12 +90,17 @@
             break;
         }
 
-        var feats = geoJsonObject.features;
-        var feat1 = feats[0];
-        var esriFeat = jsonconverter.gcFeatureToEsriFeature(feat1);
-        var graphic = makeGraphicFromFeature(esriFeat);
-        if (graphic) {
-          map.graphics.add(graphic);
+        //feats = geoJsonObject.features;
+        //feat1 = feats[0];
+        //esriFeat = jsonconverter.gcFeatureToEsriFeature(feat1);
+        esriFeats = jsonconverter.toEsri(geoJsonObject);
+        if (esriFeats && esriFeats.features){
+          for (i = 0; i < esriFeats.features.length; i++){
+            graphic = makeGraphicFromFeature(esriFeats.features[i]);
+            if (graphic) {
+              map.graphics.add(graphic);
+            }
+          }
         }
       }
 

@@ -11,7 +11,7 @@
     '
     <script src="http://code.jquery.com/jquery-1.8.0.min.js"></script>
     <script src="http://cdn.leafletjs.com/leaflet-0.4/leaflet.js"></script>
-    <script type="text/javascript" src="../src/esri2geojson.js"></script>
+    <script type="text/javascript" src="../src/jsonConverters.js"></script>
     <script type="text/javascript">
       var map, ptSymbol, lineSymbol, polySymbol, jsonconverter, geoJsonLayer;
       
@@ -64,7 +64,7 @@
       
       //make initial map with tile layer. Leaflet sets centerpoint of map using lat (y),long (x) not x,y
       $(document).ready(function(){
-        jsonconverter = esritogeojson();
+        jsonconverter = esriConverter();
         
         
         map = L.map("map").setView([37,-95], 4);
@@ -108,8 +108,8 @@
           return undefined;
         }
         
-        gcFeats = jsonconverter.esriFeaturesetToGeojsonFeatureCollection(esriObject);
-        if (gcFeats && gcFeats.features && gcFeats.features.length > 0){
+        gcFeats = jsonconverter.toGeoJson(esriObject);
+        if (gcFeats && gcFeats.features){
           symbol = getAppropriateStyle(gcFeats.features[0].geometry.type);
           geoJsonLayer = L.geoJson(gcFeats,{
             style: symbol,

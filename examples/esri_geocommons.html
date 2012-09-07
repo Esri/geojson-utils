@@ -142,15 +142,20 @@
 
         //use esri.request to send search request to geocommons
         var searchUrl = "http://www.geocommons.com/search.json?model=overlay&sort=published&query=" + term;
-        var reqHandle = esri.request({
+        /*var reqHandle = esri.request({
             url : searchUrl,
             load : searchComplete,
             error : searchError
+        });*/
+        $.ajax(searchUrl, {
+          dataType: "jsonp",
+          success: searchComplete,
+          error: searchError
         });
       }
 
-      function searchComplete(response, io) {
-        var entries = response.entries;
+      function searchComplete(data, textStatus, jqXHR) {
+        var entries = data.entries;
         if (!entries || entries.length === 0) {
             alert("No items found for your search");
             return undefined;
@@ -166,8 +171,8 @@
         $("#ditems").append(itemsToAdd);
       }
 
-      function searchError(error) {
-        alert("Error performing search: " + error);
+      function searchError(jqXHR, textStatus, errorThrown) {
+        alert("Error performing search: " + errorThrown);
       }
 
       /*Make html div element to display info about dataset found on geocommons*/
@@ -200,10 +205,15 @@
        }
 
        gcUrl = "http://www.geocommons.com/datasets/" + dataId + "/features?limit=1000";
-       reqHandle = esri.request({
+       /*reqHandle = esri.request({
          url : gcUrl,
          load : gcDataLoaded,
          error : gcDataError
+        });*/
+        $.ajax(gcUrl, {
+          dataType: "jsonp",
+          success: gcDataLoaded,
+          error: gcDataError
         });
 
        extWM = gcEntry.getExtentInWebMercator();
@@ -212,8 +222,8 @@
        }
       }
 
-      function gcDataLoaded(response, io) {
-        var feats = response.features;
+      function gcDataLoaded(data, textStatus, jqXHR) {
+        var feats = data.features;
         if (!feats || (feats.length === 0)) {
             alert("No features found");
             return;
@@ -230,8 +240,8 @@
         });
       }
 
-      function gcDataError(error) {
-        alert("Error getting data: " + error);
+      function gcDataError(jqXHR, textStatus, errorThrown) {
+        alert("Error getting data: " + errorThrown);
       }
 
       /*Gets object attached to div element. Object is a gcEntry object*/

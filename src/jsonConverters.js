@@ -9,7 +9,7 @@
  ************************************/
 function esriConverter(){
 	var esriCon = {};
-	
+
 	/*determine if polygon ring coordinates are clockwise. clockwise signifies outer ring, counter-clockwise an inner ring
    or hole. this logic was found at http://stackoverflow.com/questions/1165647/how-to-determine-if-a-list-of-polygon-
    points-are-in-clockwise-order*/
@@ -26,7 +26,7 @@ function esriConverter(){
     }
     return (total >= 0);
   }
-  
+
   /*Converts ESRI Rest Geometry to GeoJSON Geometry
    Input is ESRI Rest Geometry Object*/
   function esriGeometryToGcGeometry(esriGeom){
@@ -37,7 +37,7 @@ function esriConverter(){
 		geomParts,
 		ringArray,
 		ring;
-    
+
     //check for x, points, paths, or rings to determine geometry type.
     if (esriGeom) {
       gcGeom = {};
@@ -79,7 +79,7 @@ function esriConverter(){
     }
     return gcGeom;
   }
-  
+
   /*
    * Converts GeoJSON feature to ESRI REST Feature.
    * Input parameter is an ESRI Rest Feature object
@@ -108,7 +108,7 @@ function esriConverter(){
     }
     return gcFeat;
   }
-  
+
   /*Converts ESRI Rest Featureset, Feature, or Geometry
     to GeoJSON FeatureCollection, Feature, or Geometry */
 	esriCon.toGeoJson = function(esriObject) {
@@ -136,7 +136,7 @@ function esriConverter(){
     }
     return outObj;
   };
-	
+
 	return esriCon;
 }
 
@@ -145,7 +145,7 @@ function esriConverter(){
  ************************************************/
 function geoJsonConverter(){
 	var gCon = {};
-	
+
 	/*compares a GeoJSON geometry type and ESRI geometry type to see if they can be safely
     put together in a single ESRI feature. ESRI features must only have one
     geometry type, point, line, polygon*/
@@ -160,7 +160,7 @@ function geoJsonConverter(){
     }
     return compatible;
   }
-  
+
   /*Take a GeoJSON geometry type and make an object that has information about
    what the ESRI geometry should hold. Includes the ESRI geometry type and the name
 	 of the member that holds coordinate information*/
@@ -184,7 +184,7 @@ function geoJsonConverter(){
       geomHolder: geomHolderId
     };
   }
-  
+
    /*Wraps GeoJSON coordinates in an array if necessary so code can iterate
      through array of points, rings, or lines and add them to an ESRI geometry
      Input is a GeoJSON geometry object. A GeoJSON GeometryCollection is not a
@@ -204,12 +204,12 @@ function geoJsonConverter(){
     }
     return esriCoords;
   }
-  
+
   /*Converts GeoJSON geometry to ESRI geometry. The ESRI geometry is
     only allowed to contain one type of geometry, so if the GeoJSON
     geometry is a GeometryCollection, then only geometries compatible
     with the first geometry type in the collection are added to the ESRI geometry
-   
+
     Input parameter is a GeoJSON geometry object.*/
   function gcGeometryToEsriGeometry(gcGeom) {
     var esriGeometry,
@@ -270,7 +270,7 @@ function geoJsonConverter(){
     }
     return esriGeometry;
   }
-  
+
   /*Converts GeoJSON feature to ESRI REST Feature.
     Input parameter is a GeoJSON Feature object*/
   function gcFeatureToEsriFeature(gcFeature) {
@@ -292,7 +292,7 @@ function geoJsonConverter(){
     }
     return esriFeat;
   }
-  
+
   /*Converts GeoJSON FeatureCollection, Feature, or Geometry
     to ESRI Rest Featureset, Feature, or Geometry*/
 	gCon.toEsri = function(geoJsonObject) {
@@ -322,6 +322,6 @@ function geoJsonConverter(){
     }
     return outObj;
   };
-  
+
 	return gCon;
 }

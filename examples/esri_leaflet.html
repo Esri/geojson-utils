@@ -14,7 +14,7 @@
     <script type="text/javascript" src="../src/jsonConverters.js"></script>
     <script type="text/javascript">
       var map, ptSymbol, lineSymbol, polySymbol, jsonconverter, geoJsonLayer;
-      
+
       //default symbols for features
       ptSymbol = {
         radius: 8,
@@ -24,13 +24,13 @@
         opacity: 1,
         fillOpacity: 0.8
       };
-      
+
       lineSymbol = {
         "color": "#ff0000",
         "weight": 4,
         "opacity": 0.7
       };
-      
+
       polySymbol = {
         "fillColor": "#ff7800",
         "color": "#000",
@@ -38,7 +38,7 @@
         "opacity": 1,
         "fillOpacity": 0.8
       };
-      
+
       //get style object for line or polygon
       function getAppropriateStyle(geomType){
         var s;
@@ -50,7 +50,7 @@
         }
         return s;
       }
-      
+
       //function to set popup for feature
       function onEachFeature(feature, layer) {
         var popupContent = "", prop;
@@ -61,25 +61,24 @@
         }
         layer.bindPopup(popupContent);
       }
-      
+
       //make initial map with tile layer. Leaflet sets centerpoint of map using lat (y),long (x) not x,y
       $(document).ready(function(){
         jsonconverter = esriConverter();
-        
-        
+
         map = L.map("map").setView([37,-95], 4);
         L.tileLayer("http://acetate.geoiq.com/tiles/acetate/{z}/{x}/{y}.png", {
           attribution: "Map data <a href='http://geocommons.com'>Geocommons</a>",
           maxZoom: 18
           }).addTo(map);
       });
-      
+
       //fetch sample features, convert to geojson, and map them
       function doTest() {
         if (geoJsonLayer){
           map.removeLayer(geoJsonLayer)
         }
-        
+
         var elem = document.getElementById("selType"), esriObject, symbol, gcFeats;
         switch(elem[elem.selectedIndex].value) {
           case "Point":
@@ -107,7 +106,7 @@
         if (!esriObject){
           return undefined;
         }
-        
+
         gcFeats = jsonconverter.toGeoJson(esriObject);
         if (gcFeats && gcFeats.features){
           symbol = getAppropriateStyle(gcFeats.features[0].geometry.type);
@@ -121,7 +120,7 @@
           geoJsonLayer.addTo(map);
         }
       }
-      
+
       //functions to return sample ESRI REST feature collections
       function getTestPoint() {
         return {
@@ -182,7 +181,7 @@
          ]
         };
       }
-      
+
       function getTestMultipoint(){
         return {
          "displayFieldName": "comment",
@@ -291,7 +290,7 @@
          ]
         };
       }
-      
+
       function getTestPolylineMultipart(){
         return {
          "displayFieldName": "comment",
@@ -582,7 +581,7 @@
          ]
         };
       }
-      
+
       function getTestPolyMultipart(){
         return {
          "displayFieldName": "comment",
@@ -750,8 +749,8 @@
     </script>
   </head>
   <body>
-    <div id="map" style="width: 800px;height: 400px">
-      
+    <div id="map" style="width: 800px; height: 400px">
+
     </div>
     <div style="padding: 5px">
       <select id="selType" onchange="doTest();">

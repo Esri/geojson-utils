@@ -1,0 +1,289 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <!--
+  Geocommons REST API is used to search for datasets and display found items on page.
+  User can show dataset features on map-->
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Search Geocommons Portal Example</title>
+    <meta name="author" content="James Cardona" />
+
+    <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.1.0/css/bootstrap-combined.min.css" rel="stylesheet">
+    <style>
+        html, body {
+            height: 100%;
+            width: 100%;
+        }
+        div.gcSearchEntry {
+            max-width: 270px;
+            word-wrap: normal;
+            margin-bottom: 5px;
+            background-color: #DCDCDC
+        }
+        p.title {
+            font-size: 12pt;
+            background-color: #C0C0C0;
+            padding: 5px;
+            color: black;
+        }
+        p.description {
+            font-size: 10pt
+        }
+        #mapdiv {
+            height: 100%;
+            width: 100%
+        }
+        #searchdiv {
+            height: 100%
+        }
+        #mapcontainer {
+            height: 100%;
+            padding: 5px 5px 5px 5px
+        }
+        #searchcontainer {
+            margin: 5px 5px 5px 5px
+        }
+        #ditems {
+            height: 100%;
+            width: 100%;
+            overflow: scroll
+        }
+    </style>
+    <script type="text/javascript" src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=3.1compact"></script>
+    <script type="text/javascript" src="../src/jsonConverters.js"></script>
+    <script src="http://code.jquery.com/jquery-1.8.0.min.js"></script>
+    <script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.1.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+      var map, ptSymbol, lineSymbol, polySymbol, infoTemp, jsonconverter;
+      function init() {
+        /*proxy page used by the esri.request object. Instructions and download can be found at
+         * http://help.arcgis.com/en/webapi/javascript/arcgis/help/jshelp_start.htm#jshelp/ags_proxy.htm*/
+        esri.config.defaults.io.proxyUrl = "../../proxy.php";
+
+        //make json converter
+        jsonconverter = geoJsonConverter();
+
+        //set up default symbols
+        ptSymbol = new esri.symbol.SimpleMarkerSymbol().setSize(10).setColor(new dojo.Color([255, 0, 0]));
+        lineSymbol = new esri.symbol.SimpleLineSymbol(esri.symbol.SimpleLineSymbol.STYLE_SOLID, new dojo.Color([255, 0, 0]), 3);
+        polySymbol = new esri.symbol.SimpleFillSymbol(esri.symbol.SimpleFillSymbol.STYLE_SOLID, lineSymbol, new dojo.Color([255, 0, 0, 0.4]));
+
+        //mqke map with StreetMap basemap
+        var initExtent = esri.geometry.geographicToWebMercator(new esri.geometry.Extent(-100, 40, -75, 55));
+        map = new esri.Map("mapdiv", {
+            extent : initExtent
+        });
+        var layer = new esri.layers.ArcGISTiledMapServiceLayer("http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer", {
+            opacity : 0.6
+        });
+        map.addLayer(layer);
+
+        /*connect map onLoad event to jQuery document.ready event and set map to resize
+         when page resizes*/
+        dojo.connect(map, 'onLoad', function() {
+            $(document).ready(setMapResize);
+        });
+      }
+
+      function setMapResize() {
+        /*resize event gets sent continously during resize drag by user. so clearTimeout and
+         setTimeout used to only resize map if 100 ms between event firing*/
+        var doit;
+        $(window).resize(function() {
+            clearTimeout(doit);
+            doit = setTimeout(function() {
+                map.resize();
+            }, 100);
+        });
+      }
+
+      /*Object to hold results of geocommons search. Geocommons API returns bbox in array
+       [ymin,xmin,ymax,xmax], so boundingBox attribute of object is set to [xmin,ymin,xmax,ymax]*/
+      var gcSearchEntry = function(gcEntryJson){
+       var gcEntry = {
+         "fullDescription" : gcEntryJson.description,
+         "overlayName" : gcEntryJson.name,
+         "overlayId" : gcEntryJson.pk,
+         "numberOfFeatures" : gcEntryJson.feature_count,
+         "fullDescription" : gcEntryJson.description,
+         "boundingBox" : [gcEntryJson.bbox[1],gcEntryJson.bbox[0],gcEntryJson.bbox[3],gcEntryJson.bbox[2]]
+       };
+
+       gcEntry.getShortDescription = function(numberOfChars){
+         return gcEntryJson.description.substring(0, numberOfChars);
+       };
+
+       //bounding box of features in web mercator.
+       gcEntry.getExtentInWebMercator = function(){
+         var extWM, extWGS, bbox = gcEntry.boundingBox;
+         if (bbox && bbox.length === 4){
+           extWGS = new esri.geometry.Extent(bbox[0],bbox[1],bbox[2],bbox[3],new esri.SpatialReference(4326));
+           extWM = esri.geometry.geographicToWebMercator(extWGS);
+         }
+         return extWM;
+       };
+       return gcEntry;
+      }
+
+      /*************
+       * Functions associated with searching geocommons overlays and displaying search results
+       ************/
+      function doSearch() {
+        var term = document.getElementById("txtSearchTerm").value;
+        if (!term || term.length === 0) {
+            alert("Please enter a search term");
+            return null;
+        }
+
+        //clear old items from UI and old graphics from map
+        $("#ditems").empty();
+        map.graphics.clear();
+
+        //use esri.request to send search request to geocommons
+        var searchUrl = "http://www.geocommons.com/search.json?model=overlay&sort=published&query=" + term;
+        var reqHandle = esri.request({
+            url : searchUrl,
+            load : searchComplete,
+            error : searchError
+        });
+      }
+
+      function searchComplete(response, io) {
+        var entries = response.entries;
+        if (!entries || entries.length === 0) {
+            alert("No items found for your search");
+            return undefined;
+        }
+
+        //loop through entries returned by geocommons and make html element for each to diplay results
+        var itemsToAdd = [], divElem, gcEntry;
+        $.each(entries, function(i, v) {
+          gcEntry = gcSearchEntry(v);
+          divElem = makeEntryHtml(gcEntry).data("gcEntry",gcEntry);
+          itemsToAdd.push(divElem);
+        });
+        $("#ditems").append(itemsToAdd);
+      }
+
+      function searchError(error) {
+        alert("Error performing search: " + error);
+      }
+
+      /*Make html div element to display info about dataset found on geocommons*/
+      function makeEntryHtml(gcEntry) {
+        var descLimit = 100, desc = gcEntry.getShortDescription(descLimit),
+        newEntry = $("<div id='" + gcEntry.overlayId + "' class='gcSearchEntry well'/>");
+
+        if (gcEntry.fullDescription.length > descLimit) {
+            desc += "...";
+        }
+        newEntry.append($("<p class='title'>" + gcEntry.overlayName + "</p>"));
+        newEntry.append($("<p class='description'>" + gcEntry.numberOfFeatures + " features</p>"));
+        newEntry.append($("<p class='description'>" + desc + "</p>"));
+        newEntry.append($("<button onclick='loadGeoCommons(" + gcEntry.overlayId + ");'>Map</button>"));
+        return newEntry;
+      }
+
+      /******************
+       * Functions associated with getting geocommons overlay features
+       * and displaying them on the map
+       ******************/
+
+      /*Gets features of GeoCommons overlay by id. Also zooms map to bounding box of features*/
+      function loadGeoCommons(dataId) {
+       map.graphics.clear();
+       var gcEntry = getSearchDataById(dataId), extWM, gcUrl, reqHandle;
+       if (!gcEntry){
+         gcDataError("No data associated with ID: " + dataId);
+         return;
+       }
+
+       gcUrl = "http://www.geocommons.com/datasets/" + dataId + "/features?limit=1000";
+       reqHandle = esri.request({
+         url : gcUrl,
+         load : gcDataLoaded,
+         error : gcDataError
+        });
+
+       extWM = gcEntry.getExtentInWebMercator();
+       if (extWM){
+         map.setExtent(extWM,true);
+       }
+      }
+
+      function gcDataLoaded(response, io) {
+        var feats = response.features;
+        if (!feats || (feats.length === 0)) {
+            alert("No features found");
+            return;
+        }
+
+        /*loop through features returned from geocommons and add to map as graphic.
+         Uses geojsonutils.geojson2esri.js library*/
+        $.each(feats, function(i, v) {
+            var esriFeat = jsonconverter.toEsri(v);
+            if (esriFeat.geometry) {
+                var graphic = makeGraphicFromFeature(esriFeat);
+                map.graphics.add(graphic);
+            }
+        });
+      }
+
+      function gcDataError(error) {
+        alert("Error getting data: " + error);
+      }
+
+      /*Gets object attached to div element. Object is a gcEntry object*/
+      function getSearchDataById(dataId){
+        var gcEntry = $("#" + dataId).data("gcEntry");
+        return gcEntry;
+      }
+
+      /*Makes ESRI JSAPI graphic from ESRI JSAPI feature so can add to map*/
+      function makeGraphicFromFeature(esriFeature) {
+        var geom, graphic;
+        var infoTemp = new esri.InfoTemplate("Attributes", "${*}");
+        if (esriFeature.geometry) {
+            switch(esriFeature.geometry.type) {
+                case "esriGeometryPoint":
+                    geom = esri.geometry.geographicToWebMercator(new esri.geometry.Point(esriFeature.geometry));
+                    graphic = new esri.Graphic(geom, ptSymbol, esriFeature.attributes, infoTemp);
+                    break;
+                case "esriGeometryMultiPoint":
+                    geom = esri.geometry.geographicToWebMercator(new esri.geometry.MultiPoint(esriFeature.geometry));
+                    graphic = new esri.Graphic(geom, ptSymbol, esriFeature.attributes, infoTemp);
+                    break;
+                case "esriGeometryPolyline":
+                    geom = esri.geometry.geographicToWebMercator(new esri.geometry.Polyline(esriFeature.geometry));
+                    graphic = new esri.Graphic(geom, lineSymbol, esriFeature.attributes, infoTemp);
+                    break;
+                case "esriGeometryPolygon":
+                    geom = esri.geometry.geographicToWebMercator(new esri.geometry.Polygon(esriFeature.geometry));
+                    graphic = new esri.Graphic(geom, polySymbol, esriFeature.attributes, infoTemp);
+                    break;
+            }
+        }
+        return graphic;
+      }
+      dojo.addOnLoad(init);
+    </script>
+  </head>
+  <body>
+    <div class="row-fluid" style="height: 100%">
+      <div id="searchdiv" class="span3">
+        <div id="searchcontainer" class="well">
+          <p><strong>Enter a search term such as burger or your GeoCommons user name.</strong> </p>
+          <input type="text" id="txtSearchTerm"  style="min-width: 200px;"/>
+          <br/>
+          <input type="button" value="Search" onclick="doSearch();" />
+        </div>
+        <div id="ditems" class="span3"></div>
+      </div>
+      <div id="mapcontainer" class="span9">
+        <div id="mapdiv"></div>
+      </div>
+    </div>
+  </body>
+</html>
+

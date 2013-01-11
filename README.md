@@ -1,5 +1,3 @@
-[](https://github.com/Esri/geojson-utils/blob/master/img/thumb.png)
-
 #GeoJSON Utils
 
 This repository contains scripts and utilities for converting GeoJSON to other geographic json formats and vice versa. Currently only GeoJSON to Esri JSON has been developed. Also, note that only geometries in the WGS84 coordinate system are supported.

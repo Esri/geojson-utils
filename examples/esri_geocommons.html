@@ -49,11 +49,13 @@
             width: 100%;
             overflow: scroll
         }
+
     </style>
-    <script type="text/javascript" src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=3.1compact"></script>
+    <link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.3/js/esri/css/esri.css">
+    <script src="http://serverapi.arcgisonline.com/jsapi/arcgis/3.3/"></script>
     <script type="text/javascript" src="../src/jsonConverters.js"></script>
     <script src="http://code.jquery.com/jquery-1.8.0.min.js"></script>
-    <script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.1.0/js/bootstrap.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.0/js/bootstrap.min.js"></script>
     <script type="text/javascript">
       var map, ptSymbol, lineSymbol, polySymbol, infoTemp, jsonconverter;
       function init() {
@@ -71,13 +73,12 @@
 
         //mqke map with StreetMap basemap
         var initExtent = esri.geometry.geographicToWebMercator(new esri.geometry.Extent(-100, 40, -75, 55));
-        map = new esri.Map("mapdiv", {
-            extent : initExtent
+        map = new esri.Map("mapdiv",{
+          basemap:"streets",
+          center:[-87.5,47.5], //long, lat
+          zoom:5,
+          sliderStyle:"small"
         });
-        var layer = new esri.layers.ArcGISTiledMapServiceLayer("http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer", {
-            opacity : 0.6
-        });
-        map.addLayer(layer);
 
         /*connect map onLoad event to jQuery document.ready event and set map to resize
          when page resizes*/
@@ -231,11 +232,22 @@
 
         /*loop through features returned from geocommons and add to map as graphic.
          Uses geojsonutils.geojson2esri.js library*/
+        console.log(map.graphics);
         $.each(feats, function(i, v) {
             var esriFeat = jsonconverter.toEsri(v);
             if (esriFeat.geometry) {
-                var graphic = makeGraphicFromFeature(esriFeat);
-                map.graphics.add(graphic);
+                var graphic = new esri.Graphic(esriFeat);
+
+                //project geometry to web mercator if needed
+              if (graphic.geometry.spatialReference.wkid === 4326){
+                graphic.setGeometry(esri.geometry.geographicToWebMercator(graphic.geometry));
+              }
+
+              //set symbol for graphic and set info template
+              graphic.setSymbol(getSymbolForGraphic(graphic.geometry));
+              graphic.setInfoTemplate(new esri.InfoTemplate("Attributes", "${*}"));
+                //var graphic = makeGraphicFromFeature(esriFeat);
+              map.graphics.add(graphic);
             }
         });
       }
@@ -248,6 +260,33 @@
       function getSearchDataById(dataId){
         var gcEntry = $("#" + dataId).data("gcEntry");
         return gcEntry;
+      }
+
+      /*
+       * Get the proper symbol for the type of geometry
+       */
+      function getSymbolForGraphic(geometry){
+        var symbol;
+        if (! geometry){
+          return symbol;
+        }
+
+        switch(geometry.type) {
+          case "point":
+            symbol = ptSymbol;
+            break;
+          case "multipoint":
+            symbol = ptSymbol;
+            break;
+          case "polyline":
+            symbol = lineSymbol;
+            break;
+          case "polygon":
+            symbol = polySymbol;
+            break;
+        }
+        console.log("SYMBOL: ", symbol);
+        return symbol;
       }
 
       /*Makes ESRI JSAPI graphic from ESRI JSAPI feature so can add to map*/

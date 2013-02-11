@@ -7,9 +7,9 @@
     <title>Test GeoJSON to ESRI REST</title>
     <meta name="author" content="James Cardona" />
     <!-- Date: 2012-08-15 -->
-    <link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.1/js/dojo/dijit/themes/claro/claro.css">
-    <link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.1/js/esri/dijit/css/Popup.css">
-    <script type="text/javascript" src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=3.1compact"></script>
+    <link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.3/js/dojo/dijit/themes/claro/claro.css">
+    <link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.3/js/esri/css/esri.css">
+    <script src="http://serverapi.arcgisonline.com/jsapi/arcgis/3.3/"></script>
     <script type="text/javascript" src="../src/jsonConverters.js"></script>
     <script type="text/javascript">
       var map, ptSymbol, lineSymbol, polySymbol, infoTemp, jsonconverter;
@@ -19,46 +19,39 @@
         lineSymbol = new esri.symbol.SimpleLineSymbol(esri.symbol.SimpleLineSymbol.STYLE_SOLID, new dojo.Color([255, 0, 0]), 3);
         polySymbol = new esri.symbol.SimpleFillSymbol(esri.symbol.SimpleFillSymbol.STYLE_SOLID, lineSymbol, new dojo.Color([255, 0, 0, 0.4]));
 
-        var initExtent = esri.geometry.geographicToWebMercator(new esri.geometry.Extent(-100, 40, -75, 55));
-        map = new esri.Map("mapdiv", {
-          extent : initExtent
+        map = new esri.Map("mapdiv",{
+          basemap:"streets",
+          center:[-87.5,47.5], //long, lat
+          zoom:5,
+          sliderStyle:"small"
         });
-        var layer = new esri.layers.ArcGISTiledMapServiceLayer("http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer", {
-          opacity : 0.6
-        });
-        map.addLayer(layer);
       }
 
-      /**
-       * Makes an ESRI Javascript graphic from a feature so can add ot to the map
+      /*
+       * Get the proper symbol for the type of geometry
        */
-      function makeGraphicFromFeature(esriFeature) {
-        var geom, graphic;
-        if (!esriFeature.geometry) {
-          return graphic;
+      function getSymbolForGraphic(geometry){
+        var symbol;
+        if (! geometry){
+          return symbol;
         }
-        var infoTemp = new esri.InfoTemplate("Attributes", "${*}");
-        if (esriFeature.geometry) {
-          switch(esriFeature.geometry.type) {
-            case "esriGeometryPoint":
-              geom = esri.geometry.geographicToWebMercator(new esri.geometry.Point(esriFeature.geometry));
-              graphic = new esri.Graphic(geom, ptSymbol, esriFeature.attributes, infoTemp);
-              break;
-            case "esriGeometryMultiPoint":
-              geom = esri.geometry.geographicToWebMercator(new esri.geometry.MultiPoint(esriFeature.geometry));
-              graphic = new esri.Graphic(geom, ptSymbol, esriFeature.attributes, infoTemp);
-              break;
-            case "esriGeometryPolyline":
-              geom = esri.geometry.geographicToWebMercator(new esri.geometry.Polyline(esriFeature.geometry));
-              graphic = new esri.Graphic(geom, lineSymbol, esriFeature.attributes, infoTemp);
-              break;
-            case "esriGeometryPolygon":
-              geom = esri.geometry.geographicToWebMercator(new esri.geometry.Polygon(esriFeature.geometry));
-              graphic = new esri.Graphic(geom, polySymbol, esriFeature.attributes, infoTemp);
-              break;
-          }
+
+        switch(geometry.type) {
+          case "point":
+            symbol = ptSymbol;
+            break;
+          case "multipoint":
+            symbol = ptSymbol;
+            break;
+          case "polyline":
+            symbol = lineSymbol;
+            break;
+          case "polygon":
+            symbol = polySymbol;
+            break;
         }
-        return graphic;
+        console.log("SYMBOL: ", symbol);
+        return symbol;
       }
 
       function doTest() {
@@ -68,7 +61,7 @@
         graphic,
         elem,
         geoJsonObject;
-        
+
         map.graphics.clear();
         elem = document.getElementById("selType");
         geoJsonObject;
@@ -90,13 +83,25 @@
             break;
         }
 
-        //feats = geoJsonObject.features;
-        //feat1 = feats[0];
-        //esriFeat = jsonconverter.gcFeatureToEsriFeature(feat1);
+        //convert geojson to json that ESRI ArcGIS Server uses
         esriFeats = jsonconverter.toEsri(geoJsonObject);
+
+        //make graphic from each feature
         if (esriFeats && esriFeats.features){
           for (i = 0; i < esriFeats.features.length; i++){
-            graphic = makeGraphicFromFeature(esriFeats.features[i]);
+            var feat = esriFeats.features[i];
+            graphic = new esri.Graphic(feat);
+
+            //project geometry to web mercator if needed
+            if (graphic.geometry.spatialReference.wkid === 4326){
+              graphic.setGeometry(esri.geometry.geographicToWebMercator(graphic.geometry));
+            }
+
+            //set symbol for graphic and set info template
+            graphic.setSymbol(getSymbolForGraphic(graphic.geometry));
+            graphic.setInfoTemplate(new esri.InfoTemplate("Attributes", "${*}"));
+
+            //add graphic to map
             if (graphic) {
               map.graphics.add(graphic);
             }

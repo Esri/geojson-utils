@@ -244,7 +244,7 @@ function geoJsonConverter(){
 
     //make new empty ESRI geometry object
     esriGeometry = {
-      type: esriGeomInfo.type,
+      //type: esriGeomInfo.type,
       spatialReference: {
         wkid: 4326
       }

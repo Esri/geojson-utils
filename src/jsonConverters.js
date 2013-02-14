@@ -1,10 +1,13 @@
-/**
-* @author James Cardona
-*/
-/*global window document console */
+/*global window document console define require */
 (function() {
 
+    /**
+     * @author James Cardona
+     */
+
     "use strict";
+
+    var root = this;
 
     /************************************
      * ESRI Rest to GeoJSON Converter
@@ -16,8 +19,7 @@
           or hole. this logic was found at http://stackoverflow.com/questions/1165647/how-to-determine-if-a-list-of-polygon-
           points-are-in-clockwise-order*/
         function ringIsClockwise(ringToTest) {
-            var total = 0,
-                i = 0,
+            var total = 0,i = 0,
                 rLength = ringToTest.length,
                 pt1 = ringToTest[i],
                 pt2;
@@ -330,6 +332,15 @@
         geoJsonConverter: geoJsonConverter()
     };
 
-    return module;
+    if (typeof define === 'function') {
+        define([], function() {
+
+            return module;
+
+        });
+    } else {
+        root.jsonConverters = module;
+    }
 
 }).call(this);
+

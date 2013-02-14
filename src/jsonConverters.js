@@ -1,9 +1,8 @@
-/*global window document console define require */
+/**
+* @author James Cardona
+*/
+/*global window document console */
 (function() {
-
-    /**
-     * @author James Cardona
-     */
 
     "use strict";
 

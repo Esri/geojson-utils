@@ -2,7 +2,7 @@ var _testGeoJson = {"type":"FeatureCollection","features":[{"type":"Feature","pr
 
 var root = this;
 test('Test Converting GeoJSON MultiPolygon to EsriJSON', function () {
-    var esriJson = root.jsonConverters.geoJsonConverter.toEsri(_testGeoJson);
+    var esriJson = root.geoJsonConverter().toEsri(_testGeoJson);
     ok(typeof esriJson !== 'undefined', 'EsriJson not null');
     ok(_testGeoJson.features.length === esriJson.features.length, 'EsriJson has same amount of features as GeoJson');
 });

@@ -16,6 +16,13 @@ function geoJsonTest(obj) {
         ok(geojson.features.length === esriJson.features.length, 'EsriJson has same amount of features as GeoJson');
         ok(geojson.features[0].properties.park === esriJson.features[0].attributes.park, 'EsriJson has same attributes of feature in GeoJson');
     });
+
+    test('Converting GeoJSON of Single ' + obj.type + ' to EsriJSON', function () {
+        var geojson = obj.geojson;
+        var esriJson = root.geoJsonConverter().toEsri(geojson.features[0]);
+        ok(typeof esriJson !== 'undefined', 'EsriJson not null');
+        ok(geojson.features[0].properties.park === esriJson.attributes.park, 'EsriJson has same attributes of feature in GeoJson');
+    });
 }
 
 for (var i = 0, len = testFeatures.length; i < len; i++) {

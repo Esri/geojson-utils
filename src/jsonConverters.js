@@ -195,13 +195,18 @@
           valid input */
         function gcCoordinatesToEsriCoordinates(gcGeom) {
             var i,
+                len,
                 esriCoords;
             if (gcGeom.type === "MultiPoint" || gcGeom.type === "MultiLineString" || gcGeom.type === "Polygon") {
                 esriCoords = gcGeom.coordinates;
             } else if (gcGeom.type === "Point" || gcGeom.type === "LineString") {
                 esriCoords = [gcGeom.coordinates];
             } else if (gcGeom.type === "MultiPolygon") {
-                esriCoords = gcGeom.coordinates[0];
+                /* GeoJson MultiPolygons contains arrays of arrays. Maybe for donut Polygons? May need further testing */
+                esriCoords = [];
+                for (i = 0, len = gcGeom.coordinates.length; i < len; i++) {
+                    esriCoords.push(gcGeom.coordinates[i][0]);
+                }
             }
             return esriCoords;
         }
@@ -327,13 +332,13 @@
         return gCon;
     }
 
-    var module = {
-        esriConverter: esriConverter,
-        geoJsonConverter: geoJsonConverter
-    };
-
     if (typeof define === 'function') {
-        define([], function() {
+        var module = {
+            esriConverter: esriConverter,
+            geoJsonConverter: geoJsonConverter
+        };
+
+        define('extras/jsonConverters', [], function() {
 
             return module;
 

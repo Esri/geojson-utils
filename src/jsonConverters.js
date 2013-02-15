@@ -328,8 +328,8 @@
     }
 
     var module = {
-        esriConverter: esriConverter(),
-        geoJsonConverter: geoJsonConverter()
+        esriConverter: esriConverter,
+        geoJsonConverter: geoJsonConverter
     };
 
     if (typeof define === 'function') {
@@ -339,7 +339,8 @@
 
         });
     } else {
-        root.jsonConverters = module;
+        root.esriConverter = esriConverter;
+        root.geoJsonConverter = geoJsonConverter;
     }
 
 }).call(this);

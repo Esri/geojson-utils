@@ -12,15 +12,15 @@ function geoJsonTest(obj) {
     test('Converting GeoJSON FeatureCollection of ' + obj.type + ' to EsriJSON', function () {
         var geojson = obj.geojson;
         var esriJson = root.geoJsonConverter().toEsri(geojson);
-        ok(typeof esriJson !== 'undefined', 'EsriJson not null');
-        ok(geojson.features.length === esriJson.features.length, 'EsriJson has same amount of features as GeoJson');
+        notEqual(typeof esriJson, 'undefined', 'EsriJson not null');
+        equal(geojson.features.length, esriJson.features.length, 'EsriJson has same amount of features as GeoJson');
         deepEqual(geojson.features[0].properties, esriJson.features[0].attributes, 'EsriJson has same attributes of feature in GeoJson');
     });
 
     test('Converting GeoJSON of Single ' + obj.type + ' to EsriJSON', function () {
         var geojson = obj.geojson;
         var esriJson = root.geoJsonConverter().toEsri(geojson.features[0]);
-        ok(typeof esriJson !== 'undefined', 'EsriJson not null');
+        notEqual(typeof esriJson, 'undefined', 'EsriJson not null');
         deepEqual(geojson.features[0].properties, esriJson.attributes, 'EsriJson has same attributes of feature in GeoJson');
     });
 
@@ -73,7 +73,7 @@ function geoJsonTest(obj) {
                 var feat,
                     graphic;
                 feat = esriJson.features[i];
-                ok(feat.geometry !== null, 'EsriJson geometry is not null.');
+                notEqual(feat.geometry, null, 'EsriJson geometry is not null.');
                 graphic = new esri.Graphic(feat);
                 map.graphics.add(graphic);
             }
@@ -90,18 +90,18 @@ for (var i = 0, len = testFeatures.length; i < len; i++) {
 test('Converting GeoJSON FeatureCollection of null Points to EsriJSON', function () {
     var geojson = getTestPointNull();
     var esriJson = root.geoJsonConverter().toEsri(geojson);
-    ok(typeof esriJson !== 'undefined', 'EsriJson not null');
-    ok(typeof esriJson.features[0].geometry === 'undefined', 'EsriJson has no geometry');
-    ok(geojson.features.length === esriJson.features.length, 'EsriJson has same amount of features as GeoJson');
-    ok(geojson.features[0].properties.fax === esriJson.features[0].attributes.fax, 'EsriJson has same attributes of feature in GeoJson');
+    notEqual(typeof esriJson, 'undefined', 'EsriJson not null');
+    equal(typeof esriJson.features[0].geometry, 'undefined', 'EsriJson has no geometry');
+    equal(geojson.features.length, esriJson.features.length, 'EsriJson has same amount of features as GeoJson');
+    deepEqual(geojson.features[0].properties, esriJson.features[0].attributes, 'EsriJson has same attributes of feature in GeoJson');
 });
 
 test('Converting GeoJSON single null Point to EsriJSON', function () {
     var geojson = getTestPointNull();
     var esriJson = root.geoJsonConverter().toEsri(geojson.features[0]);
-    ok(typeof esriJson !== 'undefined', 'EsriJson not null');
-    ok(typeof esriJson.geometry === 'undefined', 'EsriJson has no geometry');
-    ok(geojson.features[0].properties.fax === esriJson.attributes.fax, 'EsriJson has same attributes of feature in GeoJson');
+    notEqual(typeof esriJson, 'undefined', 'EsriJson not null');
+    equal(typeof esriJson.geometry, 'undefined', 'EsriJson has no geometry');
+    deepEqual(geojson.features[0].properties, esriJson.attributes, 'EsriJson has same attributes of feature in GeoJson');
 });
 
 function getTestMultiPolygon() {

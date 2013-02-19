@@ -13,8 +13,9 @@
     <script type="text/javascript" src="../src/jsonConverters.js"></script>
     <script type="text/javascript">
       var map, ptSymbol, lineSymbol, polySymbol, infoTemp, jsonconverter;
+      var jsonConverters = dojo.require('extras/jsonConverters');
       function init() {
-        jsonconverter = geoJsonConverter();
+        jsonconverter = jsonConverters.geoJsonConverter();
         ptSymbol = new esri.symbol.SimpleMarkerSymbol().setSize(10).setColor(new dojo.Color([255, 0, 0]));
         lineSymbol = new esri.symbol.SimpleLineSymbol(esri.symbol.SimpleLineSymbol.STYLE_SOLID, new dojo.Color([255, 0, 0]), 3);
         polySymbol = new esri.symbol.SimpleFillSymbol(esri.symbol.SimpleFillSymbol.STYLE_SOLID, lineSymbol, new dojo.Color([255, 0, 0, 0.4]));

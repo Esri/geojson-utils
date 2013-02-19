@@ -14,15 +14,73 @@ function geoJsonTest(obj) {
         var esriJson = root.geoJsonConverter().toEsri(geojson);
         ok(typeof esriJson !== 'undefined', 'EsriJson not null');
         ok(geojson.features.length === esriJson.features.length, 'EsriJson has same amount of features as GeoJson');
-        ok(geojson.features[0].properties.park === esriJson.features[0].attributes.park, 'EsriJson has same attributes of feature in GeoJson');
+        deepEqual(geojson.features[0].properties, esriJson.features[0].attributes, 'EsriJson has same attributes of feature in GeoJson');
     });
 
     test('Converting GeoJSON of Single ' + obj.type + ' to EsriJSON', function () {
         var geojson = obj.geojson;
         var esriJson = root.geoJsonConverter().toEsri(geojson.features[0]);
         ok(typeof esriJson !== 'undefined', 'EsriJson not null');
-        ok(geojson.features[0].properties.park === esriJson.attributes.park, 'EsriJson has same attributes of feature in GeoJson');
+        deepEqual(geojson.features[0].properties, esriJson.attributes, 'EsriJson has same attributes of feature in GeoJson');
     });
+
+    /*
+     * You cannot always tell if a geometry is valid until is has been converted to
+     * a graphic and added to the map. That is what this test covers.
+     */
+    asyncTest('Add Convereted Features to Map', function () {
+        var map,
+            handle;
+
+        map = new esri.Map('map', { slider:false, basemap:'gray' });
+        handle = dojo.connect(map, 'onLoad', function () {
+
+            dojo.disconnect(handle);
+            handle = null;
+
+            var geojson,
+               esriJson,
+               count,
+               i,
+               len;
+
+            geojson = obj.geojson;
+            esriJson = root.geoJsonConverter().toEsri(geojson);
+            count = 0;
+            len = esriJson.features.length;
+
+            handle = dojo.connect(map.graphics, 'onGraphicAdd', function (g) {
+
+                count++;
+                if (g.geometry.type === 'point') {
+                    equal(isNaN(g.geometry.x), false, 'Geometry Point::x is a Number');
+                    equal(isNaN(g.geometry.y), false, 'Geometry Point::y is a Number');
+                } else {
+                    equal(isNaN(g.geometry._extent.xmax), false, 'Geometry Extent::xmax is a Number');
+                    equal(isNaN(g.geometry._extent.xmin), false, 'Geometry Extent::xmin is a Number');
+                    equal(isNaN(g.geometry._extent.ymax), false, 'Geometry Extent::ymax is a Number');
+                    equal(isNaN(g.geometry._extent.ymin), false, 'Geometry Extent::ymin is a Number');
+                }
+                if (len === count) {
+                    dojo.disconnect(handle);
+                    map.destroy();
+                    start();
+                }
+
+            });
+
+            for (i = 0; i < len; i++) {
+                var feat,
+                    graphic;
+                feat = esriJson.features[i];
+                ok(feat.geometry !== null, 'EsriJson geometry is not null.');
+                graphic = new esri.Graphic(feat);
+                map.graphics.add(graphic);
+            }
+
+        });
+    });
+
 }
 
 for (var i = 0, len = testFeatures.length; i < len; i++) {

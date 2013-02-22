@@ -26,15 +26,28 @@ This repository contains scripts and utilities for converting GeoJSON to other g
 
 ## Issues
 
-If you find a bug or want to request a new feature, please submit an issue
+Find a bug or want to request a new feature?  Please let us know by submitting an issue.
 
 ## Contributing
 
-Feel free to contribute. Just fork the repo, make changes or add new examples and submit a pull request
+Anyone and everyone is welcome to contribute.
 
 ## Licensing
+Copyright 2012 Esri
 
-See MIT-LICENSE.txt in this repo
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+A copy of the license is available in the repository's [license.txt]( https://raw.github.com/Esri/geojson-utils/master/license.txt) file.
 
 ## Examples
 ---------
@@ -47,4 +60,7 @@ This example shows how to map simple geojson features on an Esri JS API based ma
 
 ### [Search GeoCommons](http://esri.github.com/geojson-utils/examples/esri_geocommons.html)
 This example shows searching for and mapping data that is in GeoCommons on an Esri JS API based map.
+
+[](Esri Tags: GeoJSON Web Mapping)
+[](Esri Language: JavaScript)
 

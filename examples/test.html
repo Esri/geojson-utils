@@ -79,6 +79,9 @@
           case "Donut":
             geoJsonObject = getTestPolyHole();
             break;
+          case "Multi":
+            geoJsonObject = getTestMultiPolygon();
+            break;
           case "Collection":
             geoJsonObject = getTestCollection();
             break;
@@ -267,13 +270,38 @@
         };
       }
 
+      function getTestMultiPolygon(){
+        return {
+        "type":"FeatureCollection",
+        "features":[
+        {
+            "type":"Feature",
+            "properties":{
+                "cartodb_id":46,
+                "addr1":"18150 E. Pathfinder Rd.",
+                "addr2":"Rowland Heights",
+                "park":"Pathfinder Park"
+            },
+            "geometry":{
+                "type":"MultiPolygon",
+                "coordinates": [
+                    [[[102.0, 2.0], [103.0, 2.0], [103.0, 3.0], [102.0, 3.0], [102.0, 2.0]]],
+                [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]],
+                [[100.2, 0.2], [100.8, 0.2], [100.8, 0.8], [100.2, 0.8], [100.2, 0.2]]]
+                    ]
+            }
+        }
+        ]
+    }
+      }
+
 
       dojo.addOnLoad(init);
 
     </script>
   </head>
   <body class="claro">
-    <div id="mapdiv" style="width: 800px;height: 600px"></div>
+    <div id="mapdiv" style="width: 800px;height: 500px"></div>
     <div style="padding: 5px">
       <select id="selType" onchange="doTest();">
         <option>Select a geometry type</option>
@@ -281,6 +309,7 @@
         <option value="Line">Line</option>
         <option value="Polygon">Polygon</option>
         <option value="Donut">Donut Polygon</option>
+        <option value="Multi">Multi Polygon</option>
         <option value="Collection">Geometry Collection</option>
       </select>
     </div>

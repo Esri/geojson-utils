@@ -196,16 +196,28 @@
         function gcCoordinatesToEsriCoordinates(gcGeom) {
             var i,
                 len,
+                r,
+                len2,
                 esriCoords;
             if (gcGeom.type === "MultiPoint" || gcGeom.type === "MultiLineString" || gcGeom.type === "Polygon") {
                 esriCoords = gcGeom.coordinates;
             } else if (gcGeom.type === "Point" || gcGeom.type === "LineString") {
                 esriCoords = [gcGeom.coordinates];
             } else if (gcGeom.type === "MultiPolygon") {
-                /* GeoJson MultiPolygons contains arrays of arrays. Maybe for donut Polygons? May need further testing */
+                /* GeoJson MultiPolygons contains arrays of arrays. Maybe for donut Polygons? May need further testing
+                 James Cardona - 03-16-2013 - GeoJson MultiPolygon contains multiple discrete polygons, so.
+                   it is an array of polygons. For example the US State of Hawaii. Each polygon can have an outer ring
+                   and numerous inner rings. ESRI represents these as just an array of rings with inner rings
+                   flagged by their vertices being listed in counterclockwise order.
+                   To convert, each polygon ring of each polygon needs to be pushed into the ring array of the ESRI
+                   polygon */
                 esriCoords = [];
                 for (i = 0, len = gcGeom.coordinates.length; i < len; i++) {
-                    esriCoords.push(gcGeom.coordinates[i][0]);
+                    console.log("Polygon number ",i);
+                    for (r = 0, len2 = gcGeom.coordinates[i].length; r < len2; r++){
+                      console.log("Ring number ",i);
+                      esriCoords.push(gcGeom.coordinates[i][r]);
+                    }
                 }
             }
             return esriCoords;
@@ -226,6 +238,7 @@
                 coords;
 
             //if geometry collection, get info about first geometry in collection
+            console.log("Geojson Geom Type: ", gcGeom.type);
             if (gcGeom.type === "GeometryCollection") {
                 gcGeometriesToConvert = [gcGeom.geometries.shift()];
                 esriGeomInfo = gcGeomTypeToEsriGeomInfo(gcGeometriesToConvert[0].type);
@@ -268,6 +281,7 @@
             } else {
                 esriGeometry[esriGeomInfo.geomHolder] = [];
                 for (i = 0; i < gcGeometriesToConvert.length; i++) {
+                    console.log("GeoJson Geometry number ", i);
                     coords = gcCoordinatesToEsriCoordinates(gcGeometriesToConvert[i]);
                     for (g = 0; g < coords.length; g++) {
                         esriGeometry[esriGeomInfo.geomHolder].push(coords[g]);

@@ -9,27 +9,27 @@
 
     var root = this;
 
+    /*determine if polygon ring coordinates are clockwise. clockwise signifies outer ring, counter-clockwise an inner ring
+      or hole. this logic was found at http://stackoverflow.com/questions/1165647/how-to-determine-if-a-list-of-polygon-
+      points-are-in-clockwise-order*/
+    function ringIsClockwise(ringToTest) {
+        var total = 0,i = 0,
+            rLength = ringToTest.length,
+            pt1 = ringToTest[i],
+            pt2;
+        for (i; i < rLength - 1; i++) {
+            pt2 = ringToTest[i + 1];
+            total += (pt2[0] - pt1[0]) * (pt2[1] + pt1[1]);
+            pt1 = pt2;
+        }
+        return (total >= 0);
+    }
+
     /************************************
      * ESRI Rest to GeoJSON Converter
      ************************************/
     function esriConverter(){
         var esriCon = {};
-
-        /*determine if polygon ring coordinates are clockwise. clockwise signifies outer ring, counter-clockwise an inner ring
-          or hole. this logic was found at http://stackoverflow.com/questions/1165647/how-to-determine-if-a-list-of-polygon-
-          points-are-in-clockwise-order*/
-        function ringIsClockwise(ringToTest) {
-            var total = 0,i = 0,
-                rLength = ringToTest.length,
-                pt1 = ringToTest[i],
-                pt2;
-            for (i; i < rLength - 1; i++) {
-                pt2 = ringToTest[i + 1];
-                total += (pt2[0] - pt1[0]) * (pt2[1] + pt1[1]);
-                pt1 = pt2;
-            }
-            return (total >= 0);
-        }
 
         /*Converts ESRI Rest Geometry to GeoJSON Geometry
           Input is ESRI Rest Geometry Object*/
@@ -189,6 +189,28 @@
             };
         }
 
+        /*Convert GeoJSON polygon coordinates to ESRI polygon coordinates.
+          GeoJSON rings are listed starting with a singular outer ring. ESRI
+          rings can be listed in any order, but unlike GeoJSON, the ordering of
+          vertices determines whether it's an outer or inner ring. Clockwise
+          vertices indicate outer ring and counter-clockwise vertices indicate
+          inner ring */
+        function gcPolygonCoordinatesToEsriPolygonCoordinates(gcCoords) {
+           var i,
+               len,
+               esriCoords = [],
+               ring;
+           for (i = 0, len = gcCoords.length; i < len; i++) {
+               ring = gcCoords[i];
+               // Exclusive OR.
+               if ((i == 0) != ringIsClockwise(ring)) {
+                   ring = ring.reverse();
+               }
+               esriCoords.push(ring);
+           }
+           return esriCoords;
+        }
+
         /*Wraps GeoJSON coordinates in an array if necessary so code can iterate
           through array of points, rings, or lines and add them to an ESRI geometry
           Input is a GeoJSON geometry object. A GeoJSON GeometryCollection is not a
@@ -196,28 +218,17 @@
         function gcCoordinatesToEsriCoordinates(gcGeom) {
             var i,
                 len,
-                r,
-                len2,
                 esriCoords;
-            if (gcGeom.type === "MultiPoint" || gcGeom.type === "MultiLineString" || gcGeom.type === "Polygon") {
+            if (gcGeom.type === "MultiPoint" || gcGeom.type === "MultiLineString") {
                 esriCoords = gcGeom.coordinates;
             } else if (gcGeom.type === "Point" || gcGeom.type === "LineString") {
                 esriCoords = [gcGeom.coordinates];
+            } else if (gcGeom.type === "Polygon") {
+                esriCoords = gcPolygonCoordinatesToEsriPolygonCoordinates(gcGeom.coordinates);
             } else if (gcGeom.type === "MultiPolygon") {
-                /* GeoJson MultiPolygons contains arrays of arrays. Maybe for donut Polygons? May need further testing
-                 James Cardona - 03-16-2013 - GeoJson MultiPolygon contains multiple discrete polygons, so.
-                   it is an array of polygons. For example the US State of Hawaii. Each polygon can have an outer ring
-                   and numerous inner rings. ESRI represents these as just an array of rings with inner rings
-                   flagged by their vertices being listed in counterclockwise order.
-                   To convert, each polygon ring of each polygon needs to be pushed into the ring array of the ESRI
-                   polygon */
                 esriCoords = [];
                 for (i = 0, len = gcGeom.coordinates.length; i < len; i++) {
-                    console.log("Polygon number ",i);
-                    for (r = 0, len2 = gcGeom.coordinates[i].length; r < len2; r++){
-                      console.log("Ring number ",i);
-                      esriCoords.push(gcGeom.coordinates[i][r]);
-                    }
+                    esriCoords.push(gcPolygonCoordinatesToEsriPolygonCoordinates(gcGeom.coordinates[i]));
                 }
             }
             return esriCoords;
@@ -238,7 +249,6 @@
                 coords;
 
             //if geometry collection, get info about first geometry in collection
-            console.log("Geojson Geom Type: ", gcGeom.type);
             if (gcGeom.type === "GeometryCollection") {
                 gcGeometriesToConvert = [gcGeom.geometries.shift()];
                 esriGeomInfo = gcGeomTypeToEsriGeomInfo(gcGeometriesToConvert[0].type);
@@ -281,7 +291,6 @@
             } else {
                 esriGeometry[esriGeomInfo.geomHolder] = [];
                 for (i = 0; i < gcGeometriesToConvert.length; i++) {
-                    console.log("GeoJson Geometry number ", i);
                     coords = gcCoordinatesToEsriCoordinates(gcGeometriesToConvert[i]);
                     for (g = 0; g < coords.length; g++) {
                         esriGeometry[esriGeomInfo.geomHolder].push(coords[g]);

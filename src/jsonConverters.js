@@ -201,7 +201,6 @@
                esriCoords = [],
                ring;
            for (i = 0, len = gcCoords.length; i < len; i++) {
-               console.log("Ring number ",i);
                ring = gcCoords[i];
                // Exclusive OR.
                if ((i == 0) != ringIsClockwise(ring)) {
@@ -229,7 +228,6 @@
             } else if (gcGeom.type === "MultiPolygon") {
                 esriCoords = [];
                 for (i = 0, len = gcGeom.coordinates.length; i < len; i++) {
-                    console.log("Polygon number ",i);
                     esriCoords.push(gcPolygonCoordinatesToEsriPolygonCoordinates(gcGeom.coordinates[i]));
                 }
             }
@@ -251,7 +249,6 @@
                 coords;
 
             //if geometry collection, get info about first geometry in collection
-            console.log("Geojson Geom Type: ", gcGeom.type);
             if (gcGeom.type === "GeometryCollection") {
                 gcGeometriesToConvert = [gcGeom.geometries.shift()];
                 esriGeomInfo = gcGeomTypeToEsriGeomInfo(gcGeometriesToConvert[0].type);
@@ -294,7 +291,6 @@
             } else {
                 esriGeometry[esriGeomInfo.geomHolder] = [];
                 for (i = 0; i < gcGeometriesToConvert.length; i++) {
-                    console.log("GeoJson Geometry number ", i);
                     coords = gcCoordinatesToEsriCoordinates(gcGeometriesToConvert[i]);
                     for (g = 0; g < coords.length; g++) {
                         esriGeometry[esriGeomInfo.geomHolder].push(coords[g]);

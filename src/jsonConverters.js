@@ -7,7 +7,8 @@
 
     "use strict";
 
-    var root = this;
+    var root;
+    root = typeof exports !== "undefined" && exports !== null ? exports : this;
 
     /*determine if polygon ring coordinates are clockwise. clockwise signifies outer ring, counter-clockwise an inner ring
       or hole. this logic was found at http://stackoverflow.com/questions/1165647/how-to-determine-if-a-list-of-polygon-

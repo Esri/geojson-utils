@@ -89,6 +89,7 @@
 
         //convert geojson to json that ESRI ArcGIS Server uses
         esriFeats = jsonconverter.toEsri(geoJsonObject);
+        console.log("Esri Features: ", esriFeats);
 
         //make graphic from each feature
         if (esriFeats && esriFeats.features){
@@ -272,27 +273,26 @@
 
       function getTestMultiPolygon(){
         return {
-        "type":"FeatureCollection",
-        "features":[
-        {
-            "type":"Feature",
-            "properties":{
-                "cartodb_id":46,
-                "addr1":"18150 E. Pathfinder Rd.",
-                "addr2":"Rowland Heights",
-                "park":"Pathfinder Park"
-            },
-            "geometry":{
-                "type":"MultiPolygon",
+          "type":"FeatureCollection",
+          "features":[
+            {
+              "type":"Feature",
+              "properties":{
+                  "cartodb_id":46,
+                  "addr1":"18150 E. Pathfinder Rd.",
+                  "addr2":"Rowland Heights",
+                  "park":"Pathfinder Park"
+              },
+              "geometry":{ "type": "MultiPolygon",
                 "coordinates": [
-                    [[[102.0, 2.0], [103.0, 2.0], [103.0, 3.0], [102.0, 3.0], [102.0, 2.0]]],
-                [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]],
-                [[100.2, 0.2], [100.8, 0.2], [100.8, 0.8], [100.2, 0.8], [100.2, 0.2]]]
-                    ]
+                  [[[102.0, 2.0], [103.0, 2.0], [103.0, 3.0], [102.0, 3.0], [102.0, 2.0]]],
+                  [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]],
+                   [[100.2, 0.2], [100.8, 0.2], [100.8, 0.8], [100.2, 0.8], [100.2, 0.2]]]
+                  ]
+                }
             }
-        }
-        ]
-    }
+          ]
+        };
       }
 
 

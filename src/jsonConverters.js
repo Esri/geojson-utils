@@ -229,7 +229,7 @@
             } else if (gcGeom.type === "MultiPolygon") {
                 esriCoords = [];
                 for (i = 0, len = gcGeom.coordinates.length; i < len; i++) {
-                    esriCoords.push(gcPolygonCoordinatesToEsriPolygonCoordinates(gcGeom.coordinates[i]));
+                    esriCoords.push(gcPolygonCoordinatesToEsriPolygonCoordinates(gcGeom.coordinates[i])[0]);
                 }
             }
             return esriCoords;

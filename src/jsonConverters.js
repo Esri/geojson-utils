@@ -362,7 +362,7 @@
             geoJsonConverter: geoJsonConverter
         };
 
-        define('extras/jsonConverters', [], function() {
+        define([], function() {
 
             return module;
 

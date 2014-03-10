@@ -51,34 +51,7 @@ function getTestCounterClockwisePoly() {
             ]
         ]
     }
-
-
-
-    return {
-        "next_feature" : "1",
-        "type" : "FeatureCollection",
-        "start" : 0,
-        "features" : [{
-            "type" : "Feature",
-            "id" : "a7ws7wldxold",
-            "geometry" : {
-                "type" : "Polygon",
-                "coordinates" : [[[-89, 42], [-89, 50], [-80, 50], [-80, 42], [-89, 42]]]
-            },
-            "properties" : {
-                "DIST_NUM" : 7.0,
-                "LOCATION" : "Bustleton Ave. & Bowler St",
-                "PHONE" : "686-3070",
-                "DIST_NUMC" : "07",
-                "DIV_CODE" : "NEPD",
-                "AREA_SQMI" : 12.41643
-            }
-        }],
-        "sort" : null,
-        "page" : 0,
-        "count" : 25,
-        "limit" : 1
-    };
+    
 }
 
 

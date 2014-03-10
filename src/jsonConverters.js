@@ -69,7 +69,7 @@
                         if (ringIsClockwise(ring)) {
                             ringArray.push([ring]);
                         } else {
-                            ringArray[ringArray.length - 1].push(ring);
+                            ringArray.unshift([ring]);
                         }
                     }
                     if (ringArray.length > 1) {

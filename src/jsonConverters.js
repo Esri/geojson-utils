@@ -40,6 +40,7 @@
                 g,
                 coordinates,
                 geomParts,
+                polyArray,
                 ringArray,
                 ring;
 
@@ -62,21 +63,28 @@
                         coordinates = geomParts;
                     }
                 } else if (esriGeom.rings) {
+                    //array to hold the individual polygons. A polygon is an outer ring with one or more inner rings
+                    //the conversion logic assumes that the Esri json is in the format of an outer ring (clockwise)
+                    //followed by inner rings (counter-clockwise) with a clockwise ring signalling the start of a new polygon
+                    polyArray = [];
                     geomParts = esriGeom.rings;
-                    ringArray = [];
                     for (i = 0; i < geomParts.length; i++) {
                         ring = geomParts[i];
                         if (ringIsClockwise(ring)) {
-                            ringArray.push([ring]);
-                        } else {
-                            ringArray[ringArray.length - 1].push(ring);
+                            //outer ring so new polygon. Add to poly array
+                            polyArray.push([ring]);
+                        } else if (polyArray.length > 0){
+                            //inner ring. Add as part of last polygon in poly array
+                            polyArray[polyArray.length - 1].push(ring);
                         }
                     }
-                    if (ringArray.length > 1) {
-                        coordinates = ringArray;
+                    if (polyArray.length > 1) {
+                        //MultiPolygon. Leave coordinates wrapped in outer array
+                        coordinates = polyArray;
                         gcGeom.type = "MultiPolygon";
                     } else {
-                        coordinates = ringArray.pop();
+                        //Polygon. Remove outer array wrapper.
+                        coordinates = polyArray.pop();
                         gcGeom.type = "Polygon";
                     }
                 }

@@ -1,5 +1,7 @@
 #GeoJSON Utils
 
+**Anybody looking to convert between Esri JSON and GeoJSON should check out the repository https://github.com/Esri/Terraformer. Terraformer contains a GeoJSON converter and a lot more functionality.**
+
 This repository contains scripts and utilities for converting GeoJSON to other geographic json formats and vice versa. Currently only GeoJSON to Esri JSON has been developed. Also, note that only geometries in the WGS84 coordinate system are supported.
 
 ## Features

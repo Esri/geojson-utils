@@ -39,6 +39,7 @@
                 i,
                 g,
                 coordinates,
+                geomType,
                 geomParts,
                 polyArray,
                 ringArray,
@@ -46,23 +47,24 @@
 
             //check for x, points, paths, or rings to determine geometry type.
             if (esriGeom) {
-                gcGeom = {};
-                if (esriGeom.x) {
-                    gcGeom.type = "Point";
+                //gcGeom = {};
+                if (((esriGeom.x && esriGeom.x !== "NaN") || esriGeom.x === 0) &&
+                  ((esriGeom.y && esriGeom.y !== "NaN") || esriGeom.y === 0)) {
+                    geomType = "Point";
                     coordinates = [esriGeom.x, esriGeom.y];
-                } else if (esriGeom.points) {
-                    gcGeom.type = "MultiPoint";
+                } else if (esriGeom.points && esriGeom.points.length) {
+                    geomType = "MultiPoint";
                     coordinates = esriGeom.points;
-                } else if (esriGeom.paths) {
+                } else if (esriGeom.paths && esriGeom.paths.length) {
                     geomParts = esriGeom.paths;
                     if (geomParts.length === 1) {
-                        gcGeom.type = "LineString";
+                        geomType = "LineString";
                         coordinates = geomParts[0];
                     } else {
-                        gcGeom.type = "MultiLineString";
+                        geomType = "MultiLineString";
                         coordinates = geomParts;
                     }
-                } else if (esriGeom.rings) {
+                } else if (esriGeom.rings && esriGeom.rings.length) {
                     //array to hold the individual polygons. A polygon is an outer ring with one or more inner rings
                     //the conversion logic assumes that the Esri json is in the format of an outer ring (clockwise)
                     //followed by inner rings (counter-clockwise) with a clockwise ring signalling the start of a new polygon
@@ -81,14 +83,16 @@
                     if (polyArray.length > 1) {
                         //MultiPolygon. Leave coordinates wrapped in outer array
                         coordinates = polyArray;
-                        gcGeom.type = "MultiPolygon";
+                        geomType = "MultiPolygon";
                     } else {
                         //Polygon. Remove outer array wrapper.
                         coordinates = polyArray.pop();
-                        gcGeom.type = "Polygon";
+                        geomType = "Polygon";
                     }
                 }
-                gcGeom.coordinates = coordinates;
+                gcGeom = (coordinates && geomType) ? {type: geomType, coordinates: coordinates} : null;
+                return gcGeom;
+                //gcGeom.coordinates = coordinates;
             }
             return gcGeom;
         }

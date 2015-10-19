@@ -216,7 +216,7 @@
            for (i = 0, len = gcCoords.length; i < len; i++) {
                ring = gcCoords[i];
                // Exclusive OR.
-               if ((i == 0) != ringIsClockwise(ring)) {
+               if ((i === 0) !== ringIsClockwise(ring)) {
                    ring = ring.reverse();
                }
                esriCoords.push(ring);
@@ -233,15 +233,20 @@
                 len,
                 esriCoords;
             if (gcGeom.type === "MultiPoint" || gcGeom.type === "MultiLineString") {
-                esriCoords = gcGeom.coordinates;
+                esriCoords = gcGeom.coordinates || [];
             } else if (gcGeom.type === "Point" || gcGeom.type === "LineString") {
-                esriCoords = [gcGeom.coordinates];
+                esriCoords = gcGeom.coordinates ? [gcGeom.coordinates] : [];
             } else if (gcGeom.type === "Polygon") {
-                esriCoords = gcPolygonCoordinatesToEsriPolygonCoordinates(gcGeom.coordinates);
+                esriCoords = [];
+                if(gcGeom.coordinates){
+                    esriCoords = gcPolygonCoordinatesToEsriPolygonCoordinates(gcGeom.coordinates);
+                }
             } else if (gcGeom.type === "MultiPolygon") {
                 esriCoords = [];
-                for (i = 0, len = gcGeom.coordinates.length; i < len; i++) {
-                    esriCoords.push(gcPolygonCoordinatesToEsriPolygonCoordinates(gcGeom.coordinates[i])[0]);
+                if(gcGeom.coordinates){
+                    for (i = 0, len = gcGeom.coordinates.length; i < len; i++) {
+                        esriCoords.push(gcPolygonCoordinatesToEsriPolygonCoordinates(gcGeom.coordinates[i]));
+                    }
                 }
             }
             return esriCoords;
@@ -263,8 +268,9 @@
 
             //if geometry collection, get info about first geometry in collection
             if (gcGeom.type === "GeometryCollection") {
-                gcGeometriesToConvert = [gcGeom.geometries.shift()];
-                esriGeomInfo = gcGeomTypeToEsriGeomInfo(gcGeometriesToConvert[0].type);
+                var geomCompare = gcGeom.geometries[0];
+                gcGeometriesToConvert = [];
+                esriGeomInfo = gcGeomTypeToEsriGeomInfo(geomCompare.type);
 
                 //loop through collection and only add compatible geometries to the array
                 //of geometries that will be converted
@@ -294,9 +300,8 @@
 
             //perform conversion
             if (esriGeomInfo.type === "esriGeometryPoint") {
-                if (gcGeometriesToConvert[0].coordinates.length === 0) {
+                if (!gcGeometriesToConvert[0] || !gcGeometriesToConvert[0].coordinates || gcGeometriesToConvert[0].coordinates.length === 0) {
                     esriGeometry.x = null;
-                    esriGeometry.y = null;
                 } else {
                     esriGeometry.x = gcGeometriesToConvert[0].coordinates[0];
                     esriGeometry.y = gcGeometriesToConvert[0].coordinates[1];
